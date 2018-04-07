@@ -1,0 +1,21 @@
+{
+  "name": "moroz1999/imageProcess",
+  "description": "PHP image processing library for GD2",
+  "keywords": [
+    "php",
+    "gd2",
+    "image"
+  ],
+  "homepage": "https://github.com/moroz1999/imageProcess",
+  "license": "CC0-1.0",
+  "type": "package",
+  "require": {
+    "php": ">=5.4.0",
+    "wapmorgan/imagery": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "ImageProcess\\": "src/"
+    }
+  }
+}

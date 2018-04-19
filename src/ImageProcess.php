@@ -92,11 +92,12 @@ class ImageProcess
                 }
             }
 
-            $filterClassFileName = $this->processFiltersPath . $filterName . ".php";
+            $filterClassFileName = $this->processFiltersPath . ucfirst($filterName) . ".php";
             if (file_exists($filterClassFileName)) {
                 require_once $filterClassFileName;
             }
             $filterClassName = '\ImageProcess\\' . ucfirst($filterName);
+	    
             $filterObject = new $filterClassName($filterClassName, $parameters);
             $filterObject->incomingObject = $incomingObject;
             $filterObject->incomingObject2 = $incomingObject2;

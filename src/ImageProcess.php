@@ -97,7 +97,7 @@ class ImageProcess
                 require_once $filterClassFileName;
             }
             $filterClassName = '\ImageProcess\\' . ucfirst($filterName);
-	    
+
             $filterObject = new $filterClassName($filterClassName, $parameters);
             $filterObject->incomingObject = $incomingObject;
             $filterObject->incomingObject2 = $incomingObject2;
@@ -256,6 +256,9 @@ class ImageProcess
                         break;
 
                     case 'bmp':
+                        if (!function_exists('imagebmp')) {
+                            include_once('function.imagebmp.php');
+                        }
                         imagebmp($temporaryGDResource, $cacheFileName);
                         break;
                 }

@@ -72,6 +72,9 @@ class ImageObject
                     break;
                 case 'image/bmp':
                     $this->originalType = 'bmp';
+                    if (!function_exists('imagecreatefrombmp')) {
+                        include_once('function.imagecreatefrombmp.php');
+                    }
                     $this->GDResource = imagecreatefrombmp($imageFileName);
                     break;
             }

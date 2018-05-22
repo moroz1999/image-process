@@ -11,8 +11,9 @@
   "type": "package",
   "require": {
     "php": ">=5.4.0",
-    "wapmorgan/imagery": "*"
+    "wapmorgan/imagery": "dev-master"
   },
+  "minimum-stability": "dev",
   "autoload": {
     "psr-4": {
       "ImageProcess\\": "src/"

@@ -275,7 +275,7 @@ class ImageProcess
 
     protected function checkCachePath()
     {
-        if (!is_dir($this->cachePath)) {
+        if ($this->cachePath && !is_dir($this->cachePath)) {
             mkdir($this->cachePath, $this->defaultCachePermissions, true);
         }
     }

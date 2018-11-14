@@ -177,8 +177,6 @@ class ImageProcess
         $exportOperation['fileName'] = $fileName;
         $exportOperation['jpegQuality'] = $jpegQuality;
         $exportOperation['interlace'] = $interlace;
-        $exportOperation['cacheFileName'] = null;
-        $exportOperation['parametersHash'] = null;
 
         $imageObject = $this->images[$exportOperation['objectName']];
 
@@ -192,8 +190,15 @@ class ImageProcess
             $cacheFileName = $exportOperation['parametersHash'];
         }
 
+        if ($cacheGroup) {
+            $cacheFilePath = $this->cachePath . $cacheFileName . '/' . $cacheGroup;
+        } else {
+            $cacheFilePath = $this->cachePath . $cacheFileName;
+        }
+
         $exportOperation['cacheFileName'] = $cacheFileName;
         $exportOperation['cacheGroup'] = $cacheGroup;
+        $exportOperation['cacheFilePath'] = $cacheFilePath;
 
         $this->exportList[] = $exportOperation;
         return $exportOperation;
@@ -209,12 +214,7 @@ class ImageProcess
         $cacheGroup = $exportOperation['cacheGroup'];
         $jpegQuality = $exportOperation['jpegQuality'];
         $interlace = $exportOperation['interlace'];
-
-        if ($cacheGroup) {
-            $cacheFilePath = $this->cachePath . $cacheFileName . '/' . $cacheGroup;
-        } else {
-            $cacheFilePath = $this->cachePath . $cacheFileName;
-        }
+        $cacheFilePath = $exportOperation['cacheFilePath'];
 
         if (!file_exists($cacheFilePath) || !$this->imagesCaching) {
             if ($cacheGroup) {

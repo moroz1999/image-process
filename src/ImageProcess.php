@@ -178,7 +178,6 @@ class ImageProcess
         $exportOperation['jpegQuality'] = $jpegQuality;
         $exportOperation['interlace'] = $interlace;
         $exportOperation['cacheFileName'] = null;
-        $exportOperation['cacheExists'] = null;
         $exportOperation['parametersHash'] = null;
 
         $imageObject = $this->images[$exportOperation['objectName']];
@@ -192,18 +191,9 @@ class ImageProcess
         if (!$cacheFileName) {
             $cacheFileName = $exportOperation['parametersHash'];
         }
-        if ($cacheGroup) {
-            $cacheFileName = $cacheGroup . '/' . $cacheFileName;
-        }
-        $cacheFileName = $this->cachePath . $cacheFileName;
 
         $exportOperation['cacheFileName'] = $cacheFileName;
         $exportOperation['cacheGroup'] = $cacheGroup;
-        if (!file_exists($cacheFileName)) {
-            $exportOperation['cacheExists'] = false;
-        } else {
-            $exportOperation['cacheExists'] = true;
-        }
 
         $this->exportList[] = $exportOperation;
         return $exportOperation;
@@ -212,22 +202,24 @@ class ImageProcess
     protected function exportImage($exportOperation)
     {
         $objectName = $exportOperation['objectName'];
+        $parametersHash = $exportOperation['parametersHash'];
         $fileType = $exportOperation['fileType'];
         $fileName = $exportOperation['fileName'];
         $cacheFileName = $exportOperation['cacheFileName'];
         $cacheGroup = $exportOperation['cacheGroup'];
-        $cacheExists = $exportOperation['cacheExists'];
         $jpegQuality = $exportOperation['jpegQuality'];
         $interlace = $exportOperation['interlace'];
 
-        if (!$cacheExists || !$this->imagesCaching) {
+        if ($cacheGroup) {
+            $cacheFilePath = $this->cachePath . $cacheFileName . '/' . $cacheGroup;
+        } else {
+            $cacheFilePath = $this->cachePath . $cacheFileName;
+        }
+
+        if (!file_exists($cacheFilePath) || !$this->imagesCaching) {
             if ($cacheGroup) {
-                $groupDir = $this->cachePath . $cacheGroup . '/';
-                if (!is_dir($groupDir)) {
-                    mkdir($groupDir . '/');
-                    chmod($groupDir, $this->defaultCachePermissions);
-                } else {
-                    touch($groupDir);
+                if (!is_dir($this->cachePath . $cacheFileName)) {
+                    mkdir($this->cachePath . $cacheFileName, $this->defaultCachePermissions, true);
                 }
             }
             if (is_object($this->images[$objectName])) {
@@ -245,30 +237,30 @@ class ImageProcess
                 switch ($fileType) {
                     case 'jpg':
                     case 'jpeg':
-                        imagejpeg($temporaryGDResource, $cacheFileName, $jpegQuality);
+                        imagejpeg($temporaryGDResource, $cacheFilePath, $jpegQuality);
                         break;
                     case 'png':
-                        imagepng($temporaryGDResource, $cacheFileName);
+                        imagepng($temporaryGDResource, $cacheFilePath);
                         break;
 
                     case 'gif':
-                        imagegif($temporaryGDResource, $cacheFileName);
+                        imagegif($temporaryGDResource, $cacheFilePath);
                         break;
 
                     case 'bmp':
                         if (!function_exists('imagebmp')) {
                             include_once('function.imagebmp.php');
                         }
-                        imagebmp($temporaryGDResource, $cacheFileName);
+                        imagebmp($temporaryGDResource, $cacheFilePath);
                         break;
                 }
-                chmod($cacheFileName, $this->defaultCachePermissions);
+                chmod($cacheFilePath, $this->defaultCachePermissions);
                 $imageObject->cacheExists = true;
             }
         }
 
         if ($fileName != '') {
-            $fileContents = file_get_contents($cacheFileName);
+            $fileContents = file_get_contents($cacheFilePath);
             file_put_contents($fileName, $fileContents);
         }
     }

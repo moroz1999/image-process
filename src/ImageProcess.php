@@ -199,6 +199,7 @@ class ImageProcess
         $exportOperation['cacheFileName'] = $cacheFileName;
         $exportOperation['cacheGroup'] = $cacheGroup;
         $exportOperation['cacheFilePath'] = $cacheFilePath;
+        $exportOperation['cacheExists'] = is_file($cacheFilePath);
 
         $this->exportList[] = $exportOperation;
         return $exportOperation;
@@ -208,6 +209,7 @@ class ImageProcess
     {
         $objectName = $exportOperation['objectName'];
         $parametersHash = $exportOperation['parametersHash'];
+        $cacheExists = $exportOperation['cacheExists'];
         $fileType = $exportOperation['fileType'];
         $fileName = $exportOperation['fileName'];
         $cacheFileName = $exportOperation['cacheFileName'];
@@ -216,7 +218,7 @@ class ImageProcess
         $interlace = $exportOperation['interlace'];
         $cacheFilePath = $exportOperation['cacheFilePath'];
 
-        if (!file_exists($cacheFilePath) || !$this->imagesCaching) {
+        if (!$cacheExists || !$this->imagesCaching) {
             if ($cacheGroup) {
                 if (!is_dir($this->cachePath . $cacheFileName)) {
                     mkdir($this->cachePath . $cacheFileName, $this->defaultCachePermissions, true);

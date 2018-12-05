@@ -9,9 +9,9 @@ class Colorize extends Filter
     protected function processObject(ImageProcess $imageProcess, ImageObject $object1, ImageObject $object2 = null)
     {
         $outgoingObject = $imageProcess->getImageObjectCopy($this->incomingObject);
-        imagefilter($outgoingObject->GDResource, IMG_FILTER_COLORIZE, $this->red, $this->green, $this->blue);
+        imagefilter($outgoingObject->getGDResource(), IMG_FILTER_COLORIZE, $this->red, $this->green, $this->blue);
 
-        return $outgoingObject->GDResource;
+        return $outgoingObject->getGDResource();
     }
 }
 

@@ -4,22 +4,22 @@ class FillBackground extends Filter
 {
     protected function processObject(ImageProcess $imageProcess, ImageObject $object1, ImageObject $object2 = null)
     {
-        $width = $object1->width;
-        $height = $object1->height;
+        $width = $object1->getWidth();
+        $height = $object1->getHeight();
 
         $newObject = $imageProcess->getEmptyImageObject($width, $height);
         if (isset($this->color) && $this->color != '') {
             $colors = $this->hex2rgb($this->color);
-            $color = imagecolorallocate($newObject->GDResource, $colors[0], $colors[1], $colors[2]);
+            $color = imagecolorallocate($newObject->getGDResource(), $colors[0], $colors[1], $colors[2]);
         } else {
-            $color = imagecolorallocate($newObject->GDResource, 255, 255, 255);
+            $color = imagecolorallocate($newObject->getGDResource(), 255, 255, 255);
         }
-        imagefilledrectangle($newObject->GDResource, 0, 0, $width, $height, $color);
+        imagefilledrectangle($newObject->getGDResource(), 0, 0, $width, $height, $color);
 
-        imagealphablending($newObject->GDResource, true);
+        imagealphablending($newObject->getGDResource(), true);
         imagecopy(
-            $newObject->GDResource,
-            $object1->GDResource,
+            $newObject->getGDResource(),
+            $object1->getGDResource(),
             0,
             0,
             0,

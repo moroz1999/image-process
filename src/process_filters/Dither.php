@@ -7,19 +7,19 @@ class Dither extends Filter
 
     protected function processObject(ImageProcess $imageProcess, ImageObject $object1, ImageObject $object2 = null)
     {
-        imagefilter($object1->GDResource, IMG_FILTER_GRAYSCALE);
-        $width = $object1->width;
-        $height = $object1->height;
+        imagefilter($object1->getGDResource(), IMG_FILTER_GRAYSCALE);
+        $width = $object1->getWidth();
+        $height = $object1->getHeight();
         $pixels = array();
         for ($y = 0; $y < $height; $y++) {
             for ($x = 0; $x < $width; $x++) {
-                $pixels[$x][$y] = imagecolorat($object1->GDResource, $x, $y) & 0xFFFFFF;
+                $pixels[$x][$y] = imagecolorat($object1->getGDResource(), $x, $y) & 0xFFFFFF;
             }
         }
 
         $newObject = $imageProcess->getEmptyImageObject($width, $height);
-        $black = imagecolorallocate($newObject->GDResource, 0, 0, 0); //background color.
-        $white = imagecolorallocate($newObject->GDResource, 0xff, 0xff, 0xff);
+        $black = imagecolorallocate($newObject->getGDResource(), 0, 0, 0); //background color.
+        $white = imagecolorallocate($newObject->getGDResource(), 0xff, 0xff, 0xff);
 
         if ($this->method == 'atkinson') {
             for ($y = 0; $y < $height; $y++) {
@@ -27,10 +27,10 @@ class Dither extends Filter
                     $old = $pixels[$x][$y];
                     if ($old > 0xffffff * $this->offset) {
                         $new = 0xffffff;
-                        imagesetpixel($newObject->GDResource, $x, $y, $white);
+                        imagesetpixel($newObject->getGDResource(), $x, $y, $white);
                     } else {
                         $new = 0x000000;
-                        imagesetpixel($newObject->GDResource, $x, $y, $black);
+                        imagesetpixel($newObject->getGDResource(), $x, $y, $black);
 
                     }
                     $quantizationError = $old - $new;
@@ -65,10 +65,10 @@ class Dither extends Filter
                     $old = $pixels[$x][$y];
                     if ($old >= 0xffffff * $this->offset) {
                         $new = 0xffffff;
-                        imagesetpixel($newObject->GDResource, $x, $y, $white);
+                        imagesetpixel($newObject->getGDResource(), $x, $y, $white);
                     } else {
                         $new = 0x000000;
-                        imagesetpixel($newObject->GDResource, $x, $y, $black);
+                        imagesetpixel($newObject->getGDResource(), $x, $y, $black);
                     }
                     $quantizationError = $old - $new;
                     if (isset($pixels[$x + 1])) {
@@ -101,7 +101,7 @@ class Dither extends Filter
                 for ($x = 0; $x < $width; $x++) {
                     $map = floor(($pixels[$x][$y] + $bayerThresholdMap[$x % 4][$y % 4] * 0xffff / 2));
                     $color = ($map < $this->offset * 0xffffff) ? 0 : 0xffffff;
-                    imagesetpixel($newObject->GDResource, $x, $y, $color);
+                    imagesetpixel($newObject->getGDResource(), $x, $y, $color);
                 }
             }
         }

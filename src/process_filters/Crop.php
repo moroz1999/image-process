@@ -13,22 +13,22 @@ class Crop extends Filter
     {
         //if image was smaller than width or height and soft mode is used,
         //then we still have to cut some of it to retain a requested aspect ration
-        if ($this->soft && ($this->width > $object1->width || $this->height > $object1->height)) {
+        if ($this->soft && ($this->width > $object1->getWidth() || $this->height > $object1->getHeight())) {
             $requestedAspect = $this->width / $this->height;
-            if ($this->width > $object1->width) {
-                $newWidth = $object1->width;
+            if ($this->width > $object1->getWidth()) {
+                $newWidth = $object1->getWidth();
                 $newHeight = $newWidth / $requestedAspect;
 
-                if ($newHeight > $object1->height) {
-                    $newHeight = $object1->height;
+                if ($newHeight > $object1->getHeight()) {
+                    $newHeight = $object1->getHeight();
                     $newWidth = $newHeight * $requestedAspect;
                 }
-            } elseif ($this->height > $object1->height) {
-                $newHeight = $object1->height;
+            } elseif ($this->height > $object1->getHeight()) {
+                $newHeight = $object1->getHeight();
                 $newWidth = $newHeight * $requestedAspect;
 
-                if ($newWidth > $object1->width) {
-                    $newWidth = $object1->width;
+                if ($newWidth > $object1->getWidth()) {
+                    $newWidth = $object1->getWidth();
                     $newHeight = $newWidth / $requestedAspect;
                 }
             }
@@ -36,12 +36,12 @@ class Crop extends Filter
 
         } else {
             if (!$this->width) {
-                $newWidth = $object1->width;
+                $newWidth = $object1->getWidth();
             } else {
                 $newWidth = $this->width;
             }
             if (!$this->height) {
-                $newHeight = $object1->height;
+                $newHeight = $object1->getHeight();
             } else {
                 $newHeight = $this->height;
             }
@@ -51,45 +51,45 @@ class Crop extends Filter
         if ($this->color) {
             $color = hexdec($this->color);
         } else {
-            $color = imagecolorallocatealpha($newObject->GDResource, 0, 0, 0, 127);
+            $color = imagecolorallocatealpha($newObject->getGDResource(), 0, 0, 0, 127);
         }
-        imagefilledrectangle($newObject->GDResource, 0, 0, $newWidth, $newHeight, $color);
+        imagefilledrectangle($newObject->getGDResource(), 0, 0, $newWidth, $newHeight, $color);
 
         $sourceX = 0;
-        if ($object1->width > $newWidth) {
-            $sourceX = ($object1->width - $newWidth) / 2;
+        if ($object1->getWidth() > $newWidth) {
+            $sourceX = ($object1->getWidth() - $newWidth) / 2;
         }
 
         $sourceY = 0;
-        if ($object1->height > $newHeight) {
-            $sourceY = ($object1->height - $newHeight) / 2;
+        if ($object1->getHeight() > $newHeight) {
+            $sourceY = ($object1->getHeight() - $newHeight) / 2;
         }
 
-        if ($object1->width < $newWidth) {
-            $newWidth = $object1->width;
+        if ($object1->getWidth() < $newWidth) {
+            $newWidth = $object1->getWidth();
         }
-        if ($object1->height < $newHeight) {
-            $newHeight = $object1->height;
+        if ($object1->getHeight() < $newHeight) {
+            $newHeight = $object1->getHeight();
         }
         $destinationX = 0;
         if ($this->halign == 'left') {
             $destinationX = 0;
         } elseif ($this->halign == 'center') {
-            $destinationX = ($newObject->width - $newWidth) / 2;
+            $destinationX = ($newObject->getWidth() - $newWidth) / 2;
         } elseif ($this->halign == 'right') {
-            $destinationX = ($newObject->width - $newWidth);
+            $destinationX = ($newObject->getWidth() - $newWidth);
         }
 
         $destinationY = 0;
         if ($this->valign == 'top') {
             $destinationY = 0;
         } elseif ($this->valign == 'center') {
-            $destinationY = ($newObject->height - $newHeight) / 2;
+            $destinationY = ($newObject->getHeight() - $newHeight) / 2;
         } elseif ($this->valign == 'bottom') {
-            $destinationY = ($newObject->height - $newHeight);
+            $destinationY = ($newObject->getHeight() - $newHeight);
         }
-        imagealphablending($newObject->GDResource, true);
-        imagecopy($newObject->GDResource, $object1->GDResource, $destinationX, $destinationY, $sourceX, $sourceY, $newWidth, $newHeight);
+        imagealphablending($newObject->getGDResource(), true);
+        imagecopy($newObject->getGDResource(), $object1->getGDResource(), $destinationX, $destinationY, $sourceX, $sourceY, $newWidth, $newHeight);
 
         return $newObject;
     }

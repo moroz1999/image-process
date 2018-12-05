@@ -30,7 +30,7 @@ class Sharpen extends Filter
                 -1
             ),
         );
-        imageconvolution($newObject->GDResource, $matrix, $divisor - 8, 0);
+        imageconvolution($newObject->getGDResource(), $matrix, $divisor - 8, 0);
         return $newObject;
     }
 }

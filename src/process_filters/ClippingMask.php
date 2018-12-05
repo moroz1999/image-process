@@ -13,16 +13,16 @@ class ClippingMask extends Filter
         if (!$object2) {
             return false;
         }
-        $source = $imageProcess->getImageObjectCopy($object1)->GDResource;
-        $mask = $object2->GDResource;
+        $source = $imageProcess->getImageObjectCopy($object1)->getGDResource();
+        $mask = $object2->getGDResource();
 
         // Get sizes and set up new picture
         $width = imagesx($source);
         $height = imagesy($source);
 
         $newImageObject = $imageProcess->getEmptyImageObject($width, $height);
-        imagealphablending($newImageObject->GDResource, true);
-        $newImage = $newImageObject->GDResource;
+        imagealphablending($newImageObject->getGDResource(), true);
+        $newImage = $newImageObject->getGDResource();
         imagesavealpha($newImage, true);
         imagefill($newImage, 0, 0, imagecolorallocatealpha($newImage, 0, 0, 0, 127));
 

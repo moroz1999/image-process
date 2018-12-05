@@ -20,7 +20,7 @@ class Watermark extends Filter
         }
 
         $newObject = $imageProcess->getImageObjectCopy($object1);
-        $image = $newObject->GDResource;
+        $image = $newObject->getGDResource();
 
         $watermark = imagecreatefrompng($this->image);
 

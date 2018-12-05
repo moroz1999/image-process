@@ -11,7 +11,7 @@ class Contrast extends Filter
     {
         $newObject = $imageProcess->getImageObjectCopy($object1);
         $this->amount = 100 - min(max($this->amount, 1), 100) * 2;
-        imagefilter($newObject->GDResource, IMG_FILTER_CONTRAST, $this->amount);
+        imagefilter($newObject->getGDResource(), IMG_FILTER_CONTRAST, $this->amount);
         return $newObject;
     }
 }

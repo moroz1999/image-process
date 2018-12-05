@@ -4,6 +4,9 @@ namespace ImageProcess;
 
 abstract class Filter
 {
+    /**
+     * @var string
+     */
     public $name;
     /**
      * @var ImageObject
@@ -18,9 +21,14 @@ abstract class Filter
      */
     public $outgoingObject;
 
+    /**
+     * Filter constructor.
+     * @param string $name
+     * @param string $parametersString
+     */
     public function __construct($name, $parametersString = null)
     {
-        if (!is_null($parametersString)) {
+        if ($parametersString !== null) {
             $this->importParametersArray($parametersString);
         }
         $this->name = $name;
@@ -28,20 +36,26 @@ abstract class Filter
 
     public function startProcess($imageProcess)
     {
-        $this->incomingObject->prepareGDResource();
-        $this->incomingObject2->prepareGDResource();
         $resultObject = $this->processObject($imageProcess, $this->incomingObject, $this->incomingObject2);
-        $this->outgoingObject->GDResource = $resultObject->GDResource;
-        $this->outgoingObject->updateStatus();
+        $this->outgoingObject->setGDResource($resultObject->getGDResource());
     }
 
+    /**
+     * @param ImageProcess $imageProcess
+     * @param ImageObject $object1
+     * @param ImageObject|null $object2
+     * @return imageObject
+     */
     abstract protected function processObject(
         ImageProcess $imageProcess,
         ImageObject $object1,
         ImageObject $object2 = null
     );
 
-    public function importParametersArray($parametersString)
+    /**
+     * @param string $parametersString
+     */
+    protected function importParametersArray($parametersString)
     {
         $parameters = explode(',', $parametersString);
         foreach ($parameters as $parameter) {

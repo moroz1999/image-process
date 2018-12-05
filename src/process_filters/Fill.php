@@ -10,9 +10,9 @@ class Fill extends Filter
         $targetHeight = (int)$this->height;
         $targetWidth = (int)$this->width;
 
-        if ($object1->width != $targetWidth && $object1->height != $targetHeight) {
+        if ($object1->getWidth() != $targetWidth && $object1->getHeight() != $targetHeight) {
             $resultImage = $imageProcess->getEmptyImageObject($targetWidth, $targetHeight);
-            $ratio = $object1->width / $object1->height;
+            $ratio = $object1->getWidth() / $object1->getHeight();
 
             if ($ratio >= $targetWidth / $targetHeight) {
                 // by height
@@ -27,9 +27,9 @@ class Fill extends Filter
                 $offsetX = 0;
                 $offsetY = round(abs($newHeight - $targetHeight) / 2);
             }
-            imagegammacorrect($object1->GDResource, 2.2, 1.0);
-            imagecopyresampled($resultImage->GDResource, $object1->GDResource, -$offsetX, -$offsetY, 0, 0, $newWidth, $newHeight, $object1->width, $object1->height);
-            imagegammacorrect($resultImage->GDResource, 1.0, 2.2);
+            imagegammacorrect($object1->getGDResource(), 2.2, 1.0);
+            imagecopyresampled($resultImage->getGDResource(), $object1->getGDResource(), -$offsetX, -$offsetY, 0, 0, $newWidth, $newHeight, $object1->getWidth(), $object1->getHeight());
+            imagegammacorrect($resultImage->getGDResource(), 1.0, 2.2);
         } else {
             $resultImage = $object1;
         }

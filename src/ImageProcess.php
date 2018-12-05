@@ -4,15 +4,49 @@ namespace ImageProcess;
 
 class ImageProcess
 {
-    protected $filters = array();
-    protected $images = array();
-    protected $exportList = array();
-    protected $imageProcessPath = null;
-    protected $cachePath = null;
-    protected $cacheDirMarkerPath = null;
-    protected $processFiltersPath = null;
+    /**
+     * @var Filter[]
+     */
+    protected $filters = [];
+    /**
+     * @var ImageObject[]
+     */
+    protected $images = [];
+    /**
+     * @var string[][]
+     */
+    protected $exportList = [];
+    /**
+     * @var string
+     */
+    protected $imageProcessPath;
+    /**
+     * @var string
+     */
+    protected $cachePath;
+    /**
+     * @var string
+     */
+    protected $cacheDirMarkerPath;
+    /**
+     * @var string
+     */
+    protected $processFiltersPath;
     protected $jpegQuality = '90';
     protected $imagesCaching = true;
+    protected $defaultCachePermissions = 0777;
+
+    /**
+     * ImageProcess constructor.
+     * @param string $cachePath
+     */
+    public function __construct($cachePath = '')
+    {
+        $this->imageProcessPath = dirname(__FILE__);
+        $this->processFiltersPath = $this->imageProcessPath . '/process_filters/';
+
+        $this->setCachePath($cachePath);
+    }
 
     /**
      * @param bool $imagesCaching
@@ -22,16 +56,9 @@ class ImageProcess
         $this->imagesCaching = $imagesCaching;
     }
 
-    protected $defaultCachePermissions = 0777;
-
-    public function __construct($cachePath = '')
-    {
-        $this->imageProcessPath = dirname(__FILE__);
-        $this->processFiltersPath = $this->imageProcessPath . '/process_filters/';
-
-        $this->setCachePath($cachePath);
-    }
-
+    /**
+     * @param string $path
+     */
     public function setCachePath($path)
     {
         $this->cachePath = $path;
@@ -39,13 +66,23 @@ class ImageProcess
         $this->checkCachePath();
     }
 
+    /**
+     * @param int $width
+     * @param int $height
+     * @return ImageObject
+     */
     public function getEmptyImageObject($width, $height)
     {
         $newObject = new ImageObject('', '');
-        $newObject->prepareGDResource($width, $height);
+        $newObject->setWidth($width);
+        $newObject->setHeight($height);
         return $newObject;
     }
 
+    /**
+     * @param ImageObject $imageObject
+     * @return ImageObject
+     */
     public function getImageObjectCopy($imageObject)
     {
         $newObject = clone($imageObject);
@@ -53,6 +90,13 @@ class ImageProcess
         return $newObject;
     }
 
+    /**
+     * @param string $filterName
+     * @param string $parameters
+     * @param string $outgoingObjectName
+     * @param string $incomingObjectName
+     * @param string $incomingObject2Name
+     */
     public function registerFilter(
         $filterName,
         $parameters = "",
@@ -61,7 +105,6 @@ class ImageProcess
         $incomingObject2Name = ""
     ) {
         if ($this->images) {
-
             if ($incomingObjectName == "") {
                 $incomingObject = reset($this->images);
             } else {
@@ -105,10 +148,15 @@ class ImageProcess
 
             $this->filters[] = $filterObject;
 
-            $outgoingObject->cacheString .= $filterClassName . ' ' . $incomingObject->cacheString . $incomingObject2->cacheString . ' ' . $parameters . ' ';
+            $outgoingObject->appendCacheString($filterClassName . ' ' . $incomingObject->getCacheString() . $incomingObject2->getCacheString() . ' ' . $parameters . ' ');
         }
     }
 
+    /**
+     * @param string $objectName
+     * @param string $imageFileName
+     * @return string
+     */
     public function registerImage($objectName = "", $imageFileName = "")
     {
         if ($objectName == "") {
@@ -136,10 +184,6 @@ class ImageProcess
                 foreach ($this->filters as $filter) {
                     $filter->startProcess($this);
                 }
-            } else {
-                foreach ($this->images as &$imageObject) {
-                    $imageObject->prepareGDResource();
-                }
             }
         }
 
@@ -148,6 +192,16 @@ class ImageProcess
         }
     }
 
+    /**
+     * @param string $objectName
+     * @param string $fileType
+     * @param string $fileName
+     * @param int $jpegQuality
+     * @param bool $interlace
+     * @param string $cacheFileName
+     * @param string $cacheGroup
+     * @return string[]
+     */
     public function registerExport(
         $objectName = null,
         $fileType = null,
@@ -161,7 +215,7 @@ class ImageProcess
             $jpegQuality = $this->jpegQuality;
         }
 
-        $exportOperation = array();
+        $exportOperation = [];
         if (is_null($objectName)) {
             foreach ($this->images as $key => $imageObject) {
                 $objectName = &$key;
@@ -169,7 +223,7 @@ class ImageProcess
             }
         }
         if (is_null($fileType)) {
-            $fileType = $this->images[$objectName]->originalType;
+            $fileType = $this->images[$objectName]->getOriginalType();
         }
 
         $exportOperation['objectName'] = $objectName;
@@ -181,9 +235,9 @@ class ImageProcess
         $imageObject = $this->images[$exportOperation['objectName']];
 
         if ($exportOperation['fileType'] == 'jpg') {
-            $exportOperation['parametersHash'] = md5($imageObject->cacheString . ' ' . $exportOperation['fileType'] . ' ' . $jpegQuality);
+            $exportOperation['parametersHash'] = md5($imageObject->getCacheString() . ' ' . $exportOperation['fileType'] . ' ' . $jpegQuality);
         } else {
-            $exportOperation['parametersHash'] = md5($imageObject->cacheString . ' ' . $exportOperation['fileType']);
+            $exportOperation['parametersHash'] = md5($imageObject->getCacheString() . ' ' . $exportOperation['fileType']);
         }
 
         if (!$cacheFileName) {
@@ -208,7 +262,6 @@ class ImageProcess
     protected function exportImage($exportOperation)
     {
         $objectName = $exportOperation['objectName'];
-        $parametersHash = $exportOperation['parametersHash'];
         $cacheExists = $exportOperation['cacheExists'];
         $fileType = $exportOperation['fileType'];
         $fileName = $exportOperation['fileName'];
@@ -226,12 +279,12 @@ class ImageProcess
             }
             if (is_object($this->images[$objectName])) {
                 $imageObject = $this->images[$objectName];
-                $temporaryGDResource = imagecreatetruecolor($imageObject->width, $imageObject->height);
+                $temporaryGDResource = imagecreatetruecolor($imageObject->getWidth(), $imageObject->getHeight());
                 if ($fileType == 'png') {
                     imagealphablending($temporaryGDResource, false);
                     imagesavealpha($temporaryGDResource, true);
                 }
-                imagecopyresampled($temporaryGDResource, $imageObject->GDResource, 0, 0, 0, 0, $imageObject->width, $imageObject->height, $imageObject->width, $imageObject->height);
+                imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0, $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(), $imageObject->getHeight());
 
                 if ($interlace) {
                     imageinterlace($temporaryGDResource, true);
@@ -257,7 +310,6 @@ class ImageProcess
                         break;
                 }
                 chmod($cacheFilePath, $this->defaultCachePermissions);
-                $imageObject->cacheExists = true;
             }
         }
 

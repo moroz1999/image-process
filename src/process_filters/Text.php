@@ -24,7 +24,7 @@ class Text extends Filter
             return $object1;
         }
         $newObject = $imageProcess->getImageObjectCopy($object1);
-        $image = $newObject->GDResource;
+        $image = $newObject->getGDResource();
 
         $text = urldecode($this->text);
         $box = imagettfbbox($this->fontSize, 0, $this->fontFile, $text);

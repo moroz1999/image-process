@@ -303,9 +303,6 @@ class ImageProcess
                         break;
 
                     case 'bmp':
-                        if (!function_exists('imagebmp')) {
-                            include_once('function.imagebmp.php');
-                        }
                         imagebmp($temporaryGDResource, $cacheFilePath);
                         break;
                 }

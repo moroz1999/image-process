@@ -10,7 +10,8 @@
   "license": "CC0-1.0",
   "type": "package",
   "require": {
-    "php": ">=5.4.0"
+    "php": ">=5.4.0",
+    "wapmorgan/imagery": "*"
   },
   "autoload": {
     "psr-4": {

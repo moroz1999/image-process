@@ -10,7 +10,7 @@ class Dither extends Filter
         imagefilter($object1->getGDResource(), IMG_FILTER_GRAYSCALE);
         $width = $object1->getWidth();
         $height = $object1->getHeight();
-        $pixels = array();
+        $pixels = [];
         for ($y = 0; $y < $height; $y++) {
             for ($x = 0; $x < $width; $x++) {
                 $pixels[$x][$y] = imagecolorat($object1->getGDResource(), $x, $y) & 0xFFFFFF;
@@ -90,7 +90,7 @@ class Dither extends Filter
                 [15, 135, 45, 165],
                 [195, 75, 225, 105],
                 [60, 180, 30, 150],
-                [240, 120, 210, 90]
+                [240, 120, 210, 90],
             ];
 
             //            var map = Math.floor( (imageData.data[currentPixel] + bayerThresholdMap[x%4][y%4]) / 2 );

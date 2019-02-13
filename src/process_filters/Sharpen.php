@@ -13,23 +13,23 @@ class Sharpen extends Filter
         $newObject = $imageProcess->getImageObjectCopy($object1);
         $this->amount = min(max($this->amount, 1), 100);
         $divisor = round(abs(-18 + ($this->amount * 0.08)), 2); // 10-18
-        $matrix = array(
-            array(
+        $matrix = [
+            [
                 -1,
                 -1,
-                -1
-            ),
-            array(
+                -1,
+            ],
+            [
                 -1,
                 $divisor,
-                -1
-            ),
-            array(
+                -1,
+            ],
+            [
                 -1,
                 -1,
-                -1
-            ),
-        );
+                -1,
+            ],
+        ];
         imageconvolution($newObject->getGDResource(), $matrix, $divisor - 8, 0);
         return $newObject;
     }

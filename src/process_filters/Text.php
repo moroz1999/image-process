@@ -74,10 +74,10 @@ class Text extends Filter
             $g = hexdec(substr($hex, 2, 2));
             $b = hexdec(substr($hex, 4, 2));
         }
-        return array(
+        return [
             $r,
             $g,
-            $b
-        );
+            $b,
+        ];
     }
 }

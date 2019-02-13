@@ -43,7 +43,7 @@ class FillBackground extends Filter
             $g = hexdec(substr($hex, 2, 2));
             $b = hexdec(substr($hex, 4, 2));
         }
-        $rgb = array($r, $g, $b);
+        $rgb = [$r, $g, $b];
         return $rgb;
     }
 }

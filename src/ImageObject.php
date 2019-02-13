@@ -52,7 +52,7 @@ class ImageObject
                     $this->GDResource = imagecreatefrompng($imageFileName);
                     break;
                 case 'image/bmp':
-                    $this->originalType = 'bmp';                    
+                    $this->originalType = 'bmp';
                     $this->GDResource = imagecreatefrombmp($imageFileName);
                     break;
             }

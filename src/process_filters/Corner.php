@@ -34,7 +34,7 @@ class Corner extends Filter
 
         $tempImage = $imageProcess->getEmptyImageObject($object1->getWidth() * 2, $object1->getHeight() * 2);
 
-        imagecopyresampled($tempImage->getGDResource(), $object1->getGDResource(), 0, 0, 0, 0, $tempImage->width, $tempImage->height, $object1->getWidth(), $object1->getHeight());
+        imagecopyresampled($tempImage->getGDResource(), $object1->getGDResource(), 0, 0, 0, 0, $tempImage->getWidth(), $tempImage->getHeight(), $object1->getWidth(), $object1->getHeight());
 
         imageAlphaBlending($tempImage->getGDResource(), false);
         $powRadius = pow($doubleRadius, 2);
@@ -54,9 +54,9 @@ class Corner extends Filter
 
         if (substr($positions, 1, 1) == '1') {
             //right top
-            for ($x = $tempImage->width; $tempImage->width - $x < $doubleRadius; $x--) {
+            for ($x = $tempImage->getWidth(); $tempImage->getWidth() - $x < $doubleRadius; $x--) {
                 for ($y = 0; $y < $doubleRadius; $y++) {
-                    $pif = pow($doubleRadius - ($tempImage->width - $x), 2) + pow($doubleRadius - $y, 2);
+                    $pif = pow($doubleRadius - ($tempImage->getWidth() - $x), 2) + pow($doubleRadius - $y, 2);
                     if ($pif + $q >= $powRadius) {
                         imagesetpixel($tempImage->getGDResource(), $x, $y, $transparentColor);
                     }
@@ -66,9 +66,9 @@ class Corner extends Filter
 
         if (substr($positions, 2, 1) == '1') {
             //right bottom
-            for ($x = $tempImage->width; $tempImage->width - $x < $doubleRadius; $x--) {
-                for ($y = $tempImage->height; $tempImage->height - $y < $doubleRadius; $y--) {
-                    $pif = pow($doubleRadius - ($tempImage->width - $x), 2) + pow($doubleRadius - ($tempImage->height - $y), 2);
+            for ($x = $tempImage->getWidth(); $tempImage->getWidth() - $x < $doubleRadius; $x--) {
+                for ($y = $tempImage->getHeight(); $tempImage->getHeight() - $y < $doubleRadius; $y--) {
+                    $pif = pow($doubleRadius - ($tempImage->getWidth() - $x), 2) + pow($doubleRadius - ($tempImage->getHeight() - $y), 2);
                     if ($pif + $q >= $powRadius) {
                         imagesetpixel($tempImage->getGDResource(), $x, $y, $transparentColor);
                     }
@@ -79,8 +79,8 @@ class Corner extends Filter
         if (substr($positions, 3, 1) == '1') {
             //left bottom
             for ($x = 0; $x < $doubleRadius; $x++) {
-                for ($y = $tempImage->height; $tempImage->height - $y < $doubleRadius; $y--) {
-                    $pif = pow($doubleRadius - $x, 2) + pow($doubleRadius - ($tempImage->height - $y), 2);
+                for ($y = $tempImage->getHeight(); $tempImage->getHeight() - $y < $doubleRadius; $y--) {
+                    $pif = pow($doubleRadius - $x, 2) + pow($doubleRadius - ($tempImage->getHeight() - $y), 2);
                     if ($pif + $q >= $powRadius) {
                         imagesetpixel($tempImage->getGDResource(), $x, $y, $transparentColor);
                     }
@@ -91,7 +91,7 @@ class Corner extends Filter
 
         $resultImage = $imageProcess->getEmptyImageObject($object1->getWidth(), $object1->getHeight());
 
-        imagecopyresampled($resultImage->getGDResource(), $tempImage->getGDResource(), 0, 0, 0, 0, $object1->getWidth(), $object1->getHeight(), $tempImage->width, $tempImage->height);
+        imagecopyresampled($resultImage->getGDResource(), $tempImage->getGDResource(), 0, 0, 0, 0, $object1->getWidth(), $object1->getHeight(), $tempImage->getWidth(), $tempImage->getHeight());
 
         return $resultImage;
     }

@@ -32,7 +32,7 @@ class ImageProcess
      * @var string
      */
     protected $processFiltersPath;
-    protected $quality = '90';
+    protected $quality = 90;
     protected $imagesCaching = true;
     protected $defaultCachePermissions = 0777;
 
@@ -234,7 +234,7 @@ class ImageProcess
 
         $imageObject = $this->images[$exportOperation['objectName']];
 
-        if ($exportOperation['fileType'] == 'jpg') {
+        if (!empty($quality)) {
             $exportOperation['parametersHash'] = md5($imageObject->getCacheString() . ' ' . $exportOperation['fileType'] . ' ' . $quality);
         } else {
             $exportOperation['parametersHash'] = md5($imageObject->getCacheString() . ' ' . $exportOperation['fileType']);

@@ -55,6 +55,10 @@ class ImageObject
                     $this->originalType = 'bmp';
                     $this->GDResource = imagecreatefrombmp($imageFileName);
                     break;
+                case 'image/webp':
+                    $this->originalType = 'webp';
+                    $this->GDResource = imagecreatefromwebp($imageFileName);
+                    break;
             }
         }
     }

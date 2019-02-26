@@ -32,7 +32,7 @@ class ImageProcess
      * @var string
      */
     protected $processFiltersPath;
-    protected $jpegQuality = '90';
+    protected $quality = '90';
     protected $imagesCaching = true;
     protected $defaultCachePermissions = 0777;
 
@@ -196,7 +196,7 @@ class ImageProcess
      * @param string $objectName
      * @param string $fileType
      * @param string $fileName
-     * @param int $jpegQuality
+     * @param int $quality
      * @param bool $interlace
      * @param string $cacheFileName
      * @param string $cacheGroup
@@ -206,13 +206,13 @@ class ImageProcess
         $objectName = null,
         $fileType = null,
         $fileName = "",
-        $jpegQuality = null,
+        $quality = null,
         $interlace = false,
         $cacheFileName = '',
         $cacheGroup = ''
     ) {
-        if (is_null($jpegQuality)) {
-            $jpegQuality = $this->jpegQuality;
+        if (is_null($quality)) {
+            $quality = $this->quality;
         }
 
         $exportOperation = [];
@@ -229,13 +229,13 @@ class ImageProcess
         $exportOperation['objectName'] = $objectName;
         $exportOperation['fileType'] = $fileType;
         $exportOperation['fileName'] = $fileName;
-        $exportOperation['jpegQuality'] = $jpegQuality;
+        $exportOperation['quality'] = $quality;
         $exportOperation['interlace'] = $interlace;
 
         $imageObject = $this->images[$exportOperation['objectName']];
 
         if ($exportOperation['fileType'] == 'jpg') {
-            $exportOperation['parametersHash'] = md5($imageObject->getCacheString() . ' ' . $exportOperation['fileType'] . ' ' . $jpegQuality);
+            $exportOperation['parametersHash'] = md5($imageObject->getCacheString() . ' ' . $exportOperation['fileType'] . ' ' . $quality);
         } else {
             $exportOperation['parametersHash'] = md5($imageObject->getCacheString() . ' ' . $exportOperation['fileType']);
         }
@@ -267,7 +267,11 @@ class ImageProcess
         $fileName = $exportOperation['fileName'];
         $cacheFileName = $exportOperation['cacheFileName'];
         $cacheGroup = $exportOperation['cacheGroup'];
-        $jpegQuality = $exportOperation['jpegQuality'];
+        if (!empty($exportOperation['jpegQuality'])) {
+            $quality = $exportOperation['jpegQuality'];
+        } else {
+            $quality = $exportOperation['quality'];
+        }
         $interlace = $exportOperation['interlace'];
         $cacheFilePath = $exportOperation['cacheFilePath'];
 
@@ -284,7 +288,9 @@ class ImageProcess
                     imagealphablending($temporaryGDResource, false);
                     imagesavealpha($temporaryGDResource, true);
                 }
-                imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0, $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(), $imageObject->getHeight());
+                imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0,
+                    $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(),
+                    $imageObject->getHeight());
 
                 if ($interlace) {
                     imageinterlace($temporaryGDResource, true);
@@ -292,7 +298,7 @@ class ImageProcess
                 switch ($fileType) {
                     case 'jpg':
                     case 'jpeg':
-                        imagejpeg($temporaryGDResource, $cacheFilePath, $jpegQuality);
+                        imagejpeg($temporaryGDResource, $cacheFilePath, $quality);
                         break;
                     case 'png':
                         imagepng($temporaryGDResource, $cacheFilePath);
@@ -304,6 +310,10 @@ class ImageProcess
 
                     case 'bmp':
                         imagebmp($temporaryGDResource, $cacheFilePath);
+                        break;
+
+                    case 'webp':
+                        imagewebp($temporaryGDResource, $cacheFilePath, $quality);
                         break;
                 }
                 chmod($cacheFilePath, $this->defaultCachePermissions);

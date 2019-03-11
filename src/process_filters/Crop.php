@@ -8,13 +8,19 @@ class Crop extends Filter
     public $color;
     public $valign = 'center';
     public $halign = 'center';
+    public $aspectRatio;
 
     protected function processObject(ImageProcess $imageProcess, ImageObject $object1, ImageObject $object2 = null)
     {
         //if image was smaller than width or height and soft mode is used,
         //then we still have to cut some of it to retain a requested aspect ration
         if ($this->soft && ($this->width > $object1->getWidth() || $this->height > $object1->getHeight())) {
-            $requestedAspect = $this->width / $this->height;
+            if (!empty($this->aspectRatio)) {
+                $requestedAspect = $this->aspectRatio;
+            } else {
+                $requestedAspect = $this->width / $this->height;
+            }
+
             if ($this->width > $object1->getWidth()) {
                 $newWidth = $object1->getWidth();
                 $newHeight = $newWidth / $requestedAspect;
@@ -23,6 +29,7 @@ class Crop extends Filter
                     $newHeight = $object1->getHeight();
                     $newWidth = $newHeight * $requestedAspect;
                 }
+
             } elseif ($this->height > $object1->getHeight()) {
                 $newHeight = $object1->getHeight();
                 $newWidth = $newHeight * $requestedAspect;
@@ -33,17 +40,21 @@ class Crop extends Filter
                 }
             }
 
-
         } else {
-            if (!$this->width) {
-                $newWidth = $object1->getWidth();
-            } else {
+            if ($this->width) {
                 $newWidth = $this->width;
-            }
-            if (!$this->height) {
-                $newHeight = $object1->getHeight();
             } else {
+                $newWidth = $object1->getWidth();
+            }
+            if ($this->height) {
                 $newHeight = $this->height;
+            } else {
+                if (!empty($this->aspectRatio)) {
+                    $newHeight = $newWidth * $this->aspectRatio;
+                } else {
+                    $newHeight = $object1->getHeight();
+                }
+
             }
         }
 

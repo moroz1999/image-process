@@ -50,7 +50,7 @@ class Crop extends Filter
                 $newHeight = $this->height;
             } else {
                 if (!empty($this->aspectRatio)) {
-                    $newHeight = $newWidth * $this->aspectRatio;
+                    $newHeight = $newWidth / $this->aspectRatio;
                 } else {
                     $newHeight = $object1->getHeight();
                 }

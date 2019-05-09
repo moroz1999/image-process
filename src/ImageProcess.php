@@ -293,7 +293,6 @@ class ImageProcess
                 imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0,
                     $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(),
                     $imageObject->getHeight());
-
                 switch ($fileType) {
                     case 'jpg':
                     case 'jpeg':
@@ -322,6 +321,8 @@ class ImageProcess
                             $image->setOption('webp:method', '6');
                             if (!$lossless) {
                                 $image->setImageCompressionQuality($quality);
+                            } else {
+                                $image->setOption('webp:lossless', 'true');
                             }
                             $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
                             $image->setBackgroundColor(new \ImagickPixel('transparent'));

@@ -103,7 +103,8 @@ class ImageProcess
         $outgoingObjectName = "",
         $incomingObjectName = "",
         $incomingObject2Name = ""
-    ) {
+    )
+    {
         if ($this->images) {
             if ($incomingObjectName == "") {
                 $incomingObject = reset($this->images);
@@ -197,7 +198,7 @@ class ImageProcess
      * @param string $fileType
      * @param string $fileName
      * @param int $quality
-     * @param bool $interlace
+     * @param bool $lossless
      * @param string $cacheFileName
      * @param string $cacheGroup
      * @return string[]
@@ -207,10 +208,11 @@ class ImageProcess
         $fileType = null,
         $fileName = "",
         $quality = null,
-        $interlace = false,
+        $lossless = false,
         $cacheFileName = '',
         $cacheGroup = ''
-    ) {
+    )
+    {
         if (is_null($quality)) {
             $quality = $this->quality;
         }
@@ -230,7 +232,7 @@ class ImageProcess
         $exportOperation['fileType'] = $fileType;
         $exportOperation['fileName'] = $fileName;
         $exportOperation['quality'] = $quality;
-        $exportOperation['interlace'] = $interlace;
+        $exportOperation['lossless'] = $lossless;
 
         $imageObject = $this->images[$exportOperation['objectName']];
 
@@ -272,7 +274,7 @@ class ImageProcess
         } else {
             $quality = $exportOperation['quality'];
         }
-        $interlace = $exportOperation['interlace'];
+        $lossless = $exportOperation['lossless'];
         $cacheFilePath = $exportOperation['cacheFilePath'];
 
         if (!$cacheExists || !$this->imagesCaching) {
@@ -284,7 +286,7 @@ class ImageProcess
             if (is_object($this->images[$objectName])) {
                 $imageObject = $this->images[$objectName];
                 $temporaryGDResource = imagecreatetruecolor($imageObject->getWidth(), $imageObject->getHeight());
-                if ($fileType == 'png') {
+                if ($fileType == 'png' || $fileType == 'webp') {
                     imagealphablending($temporaryGDResource, false);
                     imagesavealpha($temporaryGDResource, true);
                 }
@@ -292,9 +294,6 @@ class ImageProcess
                     $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(),
                     $imageObject->getHeight());
 
-                if ($interlace) {
-                    imageinterlace($temporaryGDResource, true);
-                }
                 switch ($fileType) {
                     case 'jpg':
                     case 'jpeg':
@@ -313,7 +312,24 @@ class ImageProcess
                         break;
 
                     case 'webp':
-                        imagewebp($temporaryGDResource, $cacheFilePath, $quality);
+                        if (class_exists('Imagick')) {
+                            imagepng($temporaryGDResource, $cacheFilePath);
+
+                            $image = new \Imagick();
+                            $image->pingImage($cacheFilePath);
+                            $image->readImage($cacheFilePath);
+                            $image->setImageFormat("webp");
+                            $image->setOption('webp:method', '6');
+                            if (!$lossless) {
+                                $image->setImageCompressionQuality($quality);
+                            }
+                            $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
+                            $image->setBackgroundColor(new \ImagickPixel('transparent'));
+                            $image->writeImage($cacheFilePath);
+
+                        } else {
+                            imagewebp($temporaryGDResource, $cacheFilePath, $quality);
+                        }
                         break;
                 }
                 chmod($cacheFilePath, $this->defaultCachePermissions);

@@ -323,9 +323,9 @@ class ImageProcess
                                 $image->setImageCompressionQuality($quality);
                             } else {
                                 $image->setOption('webp:lossless', 'true');
+                                $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
+                                $image->setBackgroundColor(new \ImagickPixel('transparent'));
                             }
-                            $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
-                            $image->setBackgroundColor(new \ImagickPixel('transparent'));
                             $image->writeImage($cacheFilePath);
 
                         } else {

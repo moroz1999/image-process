@@ -92,7 +92,7 @@ class ImageProcess
 
     /**
      * @param string $filterName
-     * @param string $parameters
+     * @param string||[] $parameters
      * @param string $outgoingObjectName
      * @param string $incomingObjectName
      * @param string $incomingObject2Name

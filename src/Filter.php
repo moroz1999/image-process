@@ -24,12 +24,12 @@ abstract class Filter
     /**
      * Filter constructor.
      * @param string $name
-     * @param string $parametersString
+     * @param string $parameters
      */
-    public function __construct($name, $parametersString = null)
+    public function __construct($name, $parameters = null)
     {
-        if ($parametersString !== null) {
-            $this->importParametersArray($parametersString);
+        if ($parameters !== null) {
+            $this->importParametersArray($parameters);
         }
         $this->name = $name;
     }
@@ -53,17 +53,24 @@ abstract class Filter
     );
 
     /**
-     * @param string $parametersString
+     * @param string $parameters
      */
-    protected function importParametersArray($parametersString)
+    protected function importParametersArray($parameters)
     {
-        $parameters = explode(',', $parametersString);
-        foreach ($parameters as $parameter) {
-            $arguments = explode('=', $parameter);
-            $variable = trim($arguments[0]);
-            $value = trim($arguments[1]);
+        if (is_array($parameters)) {
+            foreach ($parameters as $variable => $value) {
+                $this->$variable = $value;
+            }
+        } else {
+            $parameters = explode(',', $parameters);
+            foreach ($parameters as $parameter) {
+                $arguments = explode('=', $parameter);
+                $variable = trim($arguments[0]);
+                $value = trim($arguments[1]);
 
-            $this->$variable = $value;
+                $this->$variable = $value;
+            }
         }
+
     }
 }

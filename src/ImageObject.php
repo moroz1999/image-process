@@ -7,17 +7,17 @@ class ImageObject
     protected $originalType;
     protected $width;
     protected $height;
-    protected $imageFileName;
+    protected $imageFilePath;
     protected $objectName;
     protected $GDResource;
     protected $cacheString;
     protected $originalSize;
     protected $originalDate;
 
-    public function __construct($objectName, $imageFileName = "")
+    public function __construct($objectName, $imageFilePath = "")
     {
         $this->objectName = $objectName;
-        $this->imageFileName = $imageFileName;
+        $this->imageFilePath = $imageFilePath;
     }
 
     protected function createEmptyGDResource()
@@ -30,34 +30,41 @@ class ImageObject
         }
     }
 
+    /**
+     * @return string
+     */
+    public function getImageFilePath()
+    {
+        return $this->imageFilePath;
+    }
+
     protected function importImageFile()
     {
-        $imageFileName = $this->imageFileName;
-        if (is_file($imageFileName)) {
-            $size = getimagesize($imageFileName);
+        if (is_file($this->imageFilePath)) {
+            $size = getimagesize($this->imageFilePath);
             $this->width = $size[0];
             $this->height = $size[1];
 
             switch ($size['mime']) {
                 case 'image/jpeg':
                     $this->originalType = 'jpg';
-                    $this->GDResource = imagecreatefromjpeg($imageFileName);
+                    $this->GDResource = imagecreatefromjpeg($this->imageFilePath);
                     break;
                 case 'image/gif':
                     $this->originalType = 'gif';
-                    $this->GDResource = imagecreatefromgif($imageFileName);
+                    $this->GDResource = imagecreatefromgif($this->imageFilePath);
                     break;
                 case 'image/png':
                     $this->originalType = 'png';
-                    $this->GDResource = imagecreatefrompng($imageFileName);
+                    $this->GDResource = imagecreatefrompng($this->imageFilePath);
                     break;
                 case 'image/bmp':
                     $this->originalType = 'bmp';
-                    $this->GDResource = imagecreatefrombmp($imageFileName);
+                    $this->GDResource = imagecreatefrombmp($this->imageFilePath);
                     break;
                 case 'image/webp':
                     $this->originalType = 'webp';
-                    $this->GDResource = imagecreatefromwebp($imageFileName);
+                    $this->GDResource = imagecreatefromwebp($this->imageFilePath);
                     break;
             }
         }
@@ -69,7 +76,7 @@ class ImageObject
     public function getGDResource()
     {
         if ($this->GDResource === null) {
-            if ($this->imageFileName != "") {
+            if ($this->imageFilePath != "") {
                 $this->importImageFile();
             } else {
                 $this->createEmptyGDResource();
@@ -162,7 +169,7 @@ class ImageObject
     public function getOriginalSize()
     {
         if ($this->originalSize === null) {
-            $this->originalSize = filesize($this->imageFileName);
+            $this->originalSize = filesize($this->imageFilePath);
         }
 
         return $this->originalSize;
@@ -174,7 +181,7 @@ class ImageObject
     public function getOriginalDate()
     {
         if ($this->originalDate === null) {
-            $this->originalDate = filemtime($this->imageFileName);
+            $this->originalDate = filemtime($this->imageFilePath);
         }
         return $this->originalDate;
     }

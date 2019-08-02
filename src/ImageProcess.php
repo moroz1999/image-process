@@ -103,8 +103,7 @@ class ImageProcess
         $outgoingObjectName = "",
         $incomingObjectName = "",
         $incomingObject2Name = ""
-    )
-    {
+    ) {
         if ($this->images) {
             if ($incomingObjectName == "") {
                 $incomingObject = reset($this->images);
@@ -211,8 +210,7 @@ class ImageProcess
         $lossless = false,
         $cacheFileName = '',
         $cacheGroup = ''
-    )
-    {
+    ) {
         if (is_null($quality)) {
             $quality = $this->quality;
         }
@@ -285,53 +283,57 @@ class ImageProcess
             }
             if (is_object($this->images[$objectName])) {
                 $imageObject = $this->images[$objectName];
-                $temporaryGDResource = imagecreatetruecolor($imageObject->getWidth(), $imageObject->getHeight());
-                if ($fileType == 'png' || $fileType == 'webp') {
-                    imagealphablending($temporaryGDResource, false);
-                    imagesavealpha($temporaryGDResource, true);
-                }
-                imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0,
-                    $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(),
-                    $imageObject->getHeight());
-                switch ($fileType) {
-                    case 'jpg':
-                    case 'jpeg':
-                        imagejpeg($temporaryGDResource, $cacheFilePath, $quality);
-                        break;
-                    case 'png':
-                        imagepng($temporaryGDResource, $cacheFilePath);
-                        break;
-
-                    case 'gif':
-                        imagegif($temporaryGDResource, $cacheFilePath);
-                        break;
-
-                    case 'bmp':
-                        imagebmp($temporaryGDResource, $cacheFilePath);
-                        break;
-
-                    case 'webp':
-                        if (class_exists('Imagick')) {
+                if ($fileType == 'svg') {
+                    copy($imageObject->getImageFilePath(), $cacheFilePath);
+                } else {
+                    $temporaryGDResource = imagecreatetruecolor($imageObject->getWidth(), $imageObject->getHeight());
+                    if ($fileType == 'png' || $fileType == 'webp') {
+                        imagealphablending($temporaryGDResource, false);
+                        imagesavealpha($temporaryGDResource, true);
+                    }
+                    imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0,
+                        $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(),
+                        $imageObject->getHeight());
+                    switch ($fileType) {
+                        case 'jpg':
+                        case 'jpeg':
+                            imagejpeg($temporaryGDResource, $cacheFilePath, $quality);
+                            break;
+                        case 'png':
                             imagepng($temporaryGDResource, $cacheFilePath);
+                            break;
 
-                            $image = new \Imagick();
-                            $image->pingImage($cacheFilePath);
-                            $image->readImage($cacheFilePath);
-                            $image->setImageFormat("webp");
-                            $image->setOption('webp:method', '6');
-                            if (!$lossless) {
-                                $image->setImageCompressionQuality($quality);
+                        case 'gif':
+                            imagegif($temporaryGDResource, $cacheFilePath);
+                            break;
+
+                        case 'bmp':
+                            imagebmp($temporaryGDResource, $cacheFilePath);
+                            break;
+
+                        case 'webp':
+                            if (class_exists('Imagick')) {
+                                imagepng($temporaryGDResource, $cacheFilePath);
+
+                                $image = new \Imagick();
+                                $image->pingImage($cacheFilePath);
+                                $image->readImage($cacheFilePath);
+                                $image->setImageFormat("webp");
+                                $image->setOption('webp:method', '6');
+                                if (!$lossless) {
+                                    $image->setImageCompressionQuality($quality);
+                                } else {
+                                    $image->setOption('webp:lossless', 'true');
+                                    $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
+                                    $image->setBackgroundColor(new \ImagickPixel('transparent'));
+                                }
+                                $image->writeImage($cacheFilePath);
+
                             } else {
-                                $image->setOption('webp:lossless', 'true');
-                                $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
-                                $image->setBackgroundColor(new \ImagickPixel('transparent'));
+                                imagewebp($temporaryGDResource, $cacheFilePath, $quality);
                             }
-                            $image->writeImage($cacheFilePath);
-
-                        } else {
-                            imagewebp($temporaryGDResource, $cacheFilePath, $quality);
-                        }
-                        break;
+                            break;
+                    }
                 }
                 chmod($cacheFilePath, $this->defaultCachePermissions);
             }

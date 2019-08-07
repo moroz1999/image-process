@@ -148,7 +148,7 @@ class ImageProcess
 
             $this->filters[] = $filterObject;
 
-            $outgoingObject->appendCacheString($filterClassName . ' ' . $incomingObject->getCacheString() . $incomingObject2->getCacheString() . ' ' . $parameters . ' ');
+            $outgoingObject->appendCacheString($filterClassName . ' ' . $incomingObject->getCacheString() . $incomingObject2->getCacheString() . ' ' . json_encode($parameters) . ' ');
         }
     }
 

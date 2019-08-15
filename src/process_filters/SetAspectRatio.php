@@ -1,59 +1,37 @@
 <?php namespace ImageProcess;
 
-class Crop extends Filter
+class SetAspectRatio extends Filter
 {
-    public $soft;
-    public $width;
-    public $height;
     public $color;
+    public $mode = 'contain';
     public $valign = 'center';
     public $halign = 'center';
     public $aspectRatio;
 
     protected function processObject(ImageProcess $imageProcess, ImageObject $object1, ImageObject $object2 = null)
     {
-        //if image was smaller than width or height and soft mode is used,
-        //then we still have to cut some of it to retain a requested aspect ration
-        if ($this->soft && ($this->width > $object1->getWidth() || $this->height > $object1->getHeight())) {
-            if (!empty($this->aspectRatio)) {
-                $requestedAspect = $this->aspectRatio;
-            } else {
-                $requestedAspect = $this->width / $this->height;
-            }
+        $originalWidth = $object1->getWidth();
+        $originalHeight = $object1->getHeight();
+        $requestedAspect = $this->aspectRatio;
 
-            if ($this->width > $object1->getWidth()) {
+        $originalAspect = $originalWidth / $originalHeight;
+
+        if ($this->mode === 'contain') {
+            if ($originalAspect > $requestedAspect) {
                 $newWidth = $object1->getWidth();
                 $newHeight = $newWidth / $requestedAspect;
-
-                if ($newHeight > $object1->getHeight()) {
-                    $newHeight = $object1->getHeight();
-                    $newWidth = $newHeight * $requestedAspect;
-                }
-
-            } elseif ($this->height > $object1->getHeight()) {
+            } else {
                 $newHeight = $object1->getHeight();
                 $newWidth = $newHeight * $requestedAspect;
-
-                if ($newWidth > $object1->getWidth()) {
-                    $newWidth = $object1->getWidth();
-                    $newHeight = $newWidth / $requestedAspect;
-                }
             }
-        } else {
-            if ($this->width) {
-                $newWidth = $this->width;
+
+        } elseif ($this->mode === 'cover') {
+            if ($originalAspect > $requestedAspect) {
+                $newHeight = $object1->getHeight();
+                $newWidth = $newHeight * $requestedAspect;
             } else {
                 $newWidth = $object1->getWidth();
-            }
-            if ($this->height) {
-                $newHeight = $this->height;
-            } else {
-                if (!empty($this->aspectRatio)) {
-                    $newHeight = $newWidth / $this->aspectRatio;
-                } else {
-                    $newHeight = $object1->getHeight();
-                }
-
+                $newHeight = $newWidth / $requestedAspect;
             }
         }
 

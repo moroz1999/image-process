@@ -29,9 +29,7 @@ class Fit extends Filter
         }
 
         $newObject = $imageProcess->getEmptyImageObject($newWidth, $newHeight);
-        imagegammacorrect($object1->getGDResource(), 2.2, 1.0);
         imagecopyresampled($newObject->getGDResource(), $object1->getGDResource(), 0, 0, 0, 0, $newWidth, $newHeight, $object1->getWidth(), $object1->getHeight());
-        imagegammacorrect($newObject->getGDResource(), 1.0, 2.2);
 
         return $newObject;
     }

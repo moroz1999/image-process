@@ -27,9 +27,7 @@ class Fill extends Filter
                 $offsetX = 0;
                 $offsetY = round(abs($newHeight - $targetHeight) / 2);
             }
-            imagegammacorrect($object1->getGDResource(), 2.2, 1.0);
             imagecopyresampled($resultImage->getGDResource(), $object1->getGDResource(), -$offsetX, -$offsetY, 0, 0, $newWidth, $newHeight, $object1->getWidth(), $object1->getHeight());
-            imagegammacorrect($resultImage->getGDResource(), 1.0, 2.2);
         } else {
             $resultImage = $object1;
         }

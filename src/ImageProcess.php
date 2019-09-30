@@ -35,6 +35,7 @@ class ImageProcess
     protected $quality = 90;
     protected $imagesCaching = true;
     protected $defaultCachePermissions = 0777;
+    protected $gammaCorrectionEnabled = false;
 
     /**
      * ImageProcess constructor.
@@ -46,6 +47,14 @@ class ImageProcess
         $this->processFiltersPath = $this->imageProcessPath . '/process_filters/';
 
         $this->setCachePath($cachePath);
+    }
+
+    /**
+     * @param bool $gammaCorrectionEnabled
+     */
+    public function setGammaCorrectionEnabled($gammaCorrectionEnabled)
+    {
+        $this->gammaCorrectionEnabled = $gammaCorrectionEnabled;
     }
 
     /**
@@ -171,6 +180,15 @@ class ImageProcess
 
     public function executeProcess()
     {
+        if ($this->gammaCorrectionEnabled) {
+            foreach ($this->images as $imageObject) {
+                if ($resource = $imageObject->getGDResource()) {
+                    imagegammacorrect($resource, 2.2, 1.0);
+                    $imageObject->setGDResource($resource);
+                }
+            }
+        }
+
         $imagesCached = true;
         foreach ($this->exportList as $key => &$exportOperation) {
             if ($exportOperation['cacheExists'] == false) {
@@ -291,9 +309,15 @@ class ImageProcess
                         imagealphablending($temporaryGDResource, false);
                         imagesavealpha($temporaryGDResource, true);
                     }
+                    if ($this->gammaCorrectionEnabled) {
+                        imagegammacorrect($imageObject->getGDResource(), 1.0, 2.2);
+                    }
                     imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0,
                         $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(),
                         $imageObject->getHeight());
+
+
+
                     switch ($fileType) {
                         case 'jpg':
                         case 'jpeg':

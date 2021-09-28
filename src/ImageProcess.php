@@ -317,46 +317,55 @@ class ImageProcess
                         $imageObject->getHeight());
 
 
+                    if ($fp = fopen($cacheFilePath, "w")) {
+                        if (flock($fp, LOCK_EX)) {
+                            $gdCacheFile = $cacheFilePath . 'gd';
+                            switch ($fileType) {
+                                case 'jpg':
+                                case 'jpeg':
+                                    imagejpeg($temporaryGDResource, $gdCacheFile, $quality);
+                                    break;
 
-                    switch ($fileType) {
-                        case 'jpg':
-                        case 'jpeg':
-                            imagejpeg($temporaryGDResource, $cacheFilePath, $quality);
-                            break;
-                        case 'png':
-                            imagepng($temporaryGDResource, $cacheFilePath);
-                            break;
+                                case 'png':
+                                    imagepng($temporaryGDResource, $gdCacheFile);
+                                    break;
 
-                        case 'gif':
-                            imagegif($temporaryGDResource, $cacheFilePath);
-                            break;
+                                case 'gif':
+                                    imagegif($temporaryGDResource, $gdCacheFile);
+                                    break;
 
-                        case 'bmp':
-                            imagebmp($temporaryGDResource, $cacheFilePath);
-                            break;
+                                case 'bmp':
+                                    imagebmp($temporaryGDResource, $gdCacheFile);
+                                    break;
 
-                        case 'webp':
-                            if (class_exists('Imagick')) {
-                                imagepng($temporaryGDResource, $cacheFilePath);
+                                case 'webp':
+                                    if (class_exists('Imagick')) {
+                                        imagepng($temporaryGDResource, $gdCacheFile);
 
-                                $image = new \Imagick();
-                                $image->pingImage($cacheFilePath);
-                                $image->readImage($cacheFilePath);
-                                $image->setImageFormat("webp");
-                                $image->setOption('webp:method', '6');
-                                if (!$lossless) {
-                                    $image->setImageCompressionQuality($quality);
-                                } else {
-                                    $image->setOption('webp:lossless', 'true');
-                                    $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
-                                    $image->setBackgroundColor(new \ImagickPixel('transparent'));
-                                }
-                                $image->writeImage($cacheFilePath);
-
-                            } else {
-                                imagewebp($temporaryGDResource, $cacheFilePath, $quality);
+                                        $image = new \Imagick();
+                                        $image->pingImage($gdCacheFile);
+                                        $image->readImage($gdCacheFile);
+                                        $image->setImageFormat("webp");
+                                        $image->setOption('webp:method', '6');
+                                        if (!$lossless) {
+                                            $image->setImageCompressionQuality($quality);
+                                        } else {
+                                            $image->setOption('webp:lossless', 'true');
+                                            $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
+                                            $image->setBackgroundColor(new \ImagickPixel('transparent'));
+                                        }
+                                        $image->writeImage($gdCacheFile);
+                                    } else {
+                                        imagewebp($temporaryGDResource, $gdCacheFile, $quality);
+                                    }
+                                    break;
                             }
-                            break;
+                            ftruncate($fp, 0);
+                            fwrite($fp, file_get_contents($gdCacheFile));
+                            unlink($gdCacheFile);
+                            flock($fp, LOCK_UN);
+                        }
+                        fclose($fp);
                     }
                 }
                 chmod($cacheFilePath, $this->defaultCachePermissions);

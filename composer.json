@@ -12,7 +12,6 @@
   "require": {
     "ext-gd": "*",
     "php": ">=7.0",
-    "ext-imagick": "*"
   },
   "autoload": {
     "psr-4": {

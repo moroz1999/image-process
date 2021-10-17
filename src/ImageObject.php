@@ -160,6 +160,9 @@ class ImageObject
      */
     public function getOriginalType()
     {
+        if ($this->originalType === null){
+            $this->importImageFile();
+        }
         return $this->originalType;
     }
 

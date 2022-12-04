@@ -36,8 +36,10 @@ abstract class Filter
 
     public function startProcess($imageProcess)
     {
-        $resultObject = $this->processObject($imageProcess, $this->incomingObject, $this->incomingObject2);
-        $this->outgoingObject->setGDResource($resultObject->getGDResource());
+        if ($this->incomingObject->getGDResource()){
+            $resultObject = $this->processObject($imageProcess, $this->incomingObject, $this->incomingObject2);
+            $this->outgoingObject->setGDResource($resultObject->getGDResource());
+        }
     }
 
     /**

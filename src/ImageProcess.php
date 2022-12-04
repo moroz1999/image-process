@@ -299,7 +299,7 @@ class ImageProcess
                     mkdir($this->cachePath . $cacheFileName, $this->defaultCachePermissions, true);
                 }
             }
-            if (is_object($this->images[$objectName])) {
+            if (is_object($this->images[$objectName]) && $this->images[$objectName]->getGDResource()) {
                 $imageObject = $this->images[$objectName];
                 if ($fileType == 'svg') {
                     copy($imageObject->getImageFilePath(), $cacheFilePath);

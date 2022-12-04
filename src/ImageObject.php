@@ -41,31 +41,32 @@ class ImageObject
     protected function importImageFile()
     {
         if (is_file($this->imageFilePath)) {
-            $size = getimagesize($this->imageFilePath);
-            $this->width = $size[0];
-            $this->height = $size[1];
+            if ($size = getimagesize($this->imageFilePath)) {
+                $this->width = $size[0];
+                $this->height = $size[1];
 
-            switch ($size['mime']) {
-                case 'image/jpeg':
-                    $this->originalType = 'jpg';
-                    $this->GDResource = imagecreatefromjpeg($this->imageFilePath);
-                    break;
-                case 'image/gif':
-                    $this->originalType = 'gif';
-                    $this->GDResource = imagecreatefromgif($this->imageFilePath);
-                    break;
-                case 'image/png':
-                    $this->originalType = 'png';
-                    $this->GDResource = imagecreatefrompng($this->imageFilePath);
-                    break;
-                case 'image/bmp':
-                    $this->originalType = 'bmp';
-                    $this->GDResource = imagecreatefrombmp($this->imageFilePath);
-                    break;
-                case 'image/webp':
-                    $this->originalType = 'webp';
-                    $this->GDResource = imagecreatefromwebp($this->imageFilePath);
-                    break;
+                switch ($size['mime']) {
+                    case 'image/jpeg':
+                        $this->originalType = 'jpg';
+                        $this->GDResource = imagecreatefromjpeg($this->imageFilePath);
+                        break;
+                    case 'image/gif':
+                        $this->originalType = 'gif';
+                        $this->GDResource = imagecreatefromgif($this->imageFilePath);
+                        break;
+                    case 'image/png':
+                        $this->originalType = 'png';
+                        $this->GDResource = imagecreatefrompng($this->imageFilePath);
+                        break;
+                    case 'image/bmp':
+                        $this->originalType = 'bmp';
+                        $this->GDResource = imagecreatefrombmp($this->imageFilePath);
+                        break;
+                    case 'image/webp':
+                        $this->originalType = 'webp';
+                        $this->GDResource = imagecreatefromwebp($this->imageFilePath);
+                        break;
+                }
             }
         }
     }
@@ -160,7 +161,7 @@ class ImageObject
      */
     public function getOriginalType()
     {
-        if ($this->originalType === null){
+        if ($this->originalType === null) {
             $this->importImageFile();
         }
         return $this->originalType;

@@ -41,11 +41,8 @@ class ImageObject
     protected function importImageFile()
     {
         if (is_file($this->imageFilePath)) {
-            if ($size = getimagesize($this->imageFilePath)) {
-                $this->width = $size[0];
-                $this->height = $size[1];
-
-                switch ($size['mime']) {
+            if ($info = getimagesize($this->imageFilePath)) {
+                switch ($info['mime']) {
                     case 'image/jpeg':
                         $this->originalType = 'jpg';
                         $this->GDResource = imagecreatefromjpeg($this->imageFilePath);
@@ -66,6 +63,10 @@ class ImageObject
                         $this->originalType = 'webp';
                         $this->GDResource = imagecreatefromwebp($this->imageFilePath);
                         break;
+                }
+                if ($this->GDResource) {
+                    $this->width = imagesx($this->GDResource);
+                    $this->height = imagesy($this->GDResource);
                 }
             }
         }

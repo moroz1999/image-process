@@ -1,126 +1,98 @@
 <?php
+declare(strict_types=1);
 
 namespace ImageProcess;
+
+use Imagick;
+use ImagickException;
+use ImagickPixel;
+use RuntimeException;
 
 class ImageProcess
 {
     /**
      * @var Filter[]
      */
-    protected $filters = [];
+    protected array $filters = [];
     /**
-     * @var ImageObject[]
+     * @var array<string, ImageObject>
      */
-    protected $images = [];
+    protected array $images = [];
     /**
      * @var string[][]
      */
-    protected $exportList = [];
-    /**
-     * @var string
-     */
-    protected $imageProcessPath;
-    /**
-     * @var string
-     */
-    protected $cachePath;
-    /**
-     * @var string
-     */
-    protected $cacheDirMarkerPath;
-    /**
-     * @var string
-     */
-    protected $processFiltersPath;
-    protected $quality = 90;
-    protected $imagesCaching = true;
-    protected $defaultCachePermissions = 0777;
-    protected $gammaCorrectionEnabled = false;
+    protected array $exportList = [];
+    protected string $cachePath;
+    protected string $cacheDirMarkerPath;
+    protected int $quality = 90;
+    protected bool $imagesCaching = true;
+    protected int $defaultCachePermissions = 0777;
+    protected bool $gammaCorrectionEnabled = false;
 
-    /**
-     * ImageProcess constructor.
-     * @param string $cachePath
-     */
-    public function __construct($cachePath = '')
+    public function __construct(string $cachePath = '')
     {
-        $this->imageProcessPath = dirname(__FILE__);
-        $this->processFiltersPath = $this->imageProcessPath . '/process_filters/';
-
         $this->setCachePath($cachePath);
     }
 
-    /**
-     * @param bool $gammaCorrectionEnabled
-     */
-    public function setGammaCorrectionEnabled($gammaCorrectionEnabled)
-    {
-        $this->gammaCorrectionEnabled = $gammaCorrectionEnabled;
-    }
-
-    /**
-     * @param bool $imagesCaching
-     */
-    public function setImagesCaching($imagesCaching)
-    {
-        $this->imagesCaching = $imagesCaching;
-    }
-
-    /**
-     * @param string $path
-     */
-    public function setCachePath($path)
+    public function setCachePath(string $path): void
     {
         $this->cachePath = $path;
         $this->cacheDirMarkerPath = $this->cachePath . '/_marker';
         $this->checkCachePath();
     }
 
-    /**
-     * @param int $width
-     * @param int $height
-     * @return ImageObject
-     */
-    public function getEmptyImageObject($width, $height)
+    protected function checkCachePath(): void
     {
-        $newObject = new ImageObject('', '');
+        if ($this->cachePath && !is_dir($this->cachePath)) {
+            if (!mkdir($concurrentDirectory = $this->cachePath, $this->defaultCachePermissions, true) && !is_dir($concurrentDirectory)) {
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+            }
+        }
+    }
+
+    public function setGammaCorrectionEnabled(bool $gammaCorrectionEnabled): void
+    {
+        $this->gammaCorrectionEnabled = $gammaCorrectionEnabled;
+    }
+
+    public function setImagesCaching(bool $imagesCaching): void
+    {
+        $this->imagesCaching = $imagesCaching;
+    }
+
+    public function getEmptyImageObject(int $width, int $height): ImageObject
+    {
+        $newObject = new ImageObject('');
         $newObject->setWidth($width);
         $newObject->setHeight($height);
         return $newObject;
     }
 
-    /**
-     * @param ImageObject $imageObject
-     * @return ImageObject
-     */
-    public function getImageObjectCopy($imageObject)
+    public function getImageObjectCopy(ImageObject $imageObject): ImageObject
     {
-        $newObject = clone($imageObject);
-
-        return $newObject;
+        return clone($imageObject);
     }
 
-    /**
-     * @param string $filterName
-     * @param string||[] $parameters
-     * @param string $outgoingObjectName
-     * @param string $incomingObjectName
-     * @param string $incomingObject2Name
-     */
     public function registerFilter(
-        $filterName,
-        $parameters = "",
-        $outgoingObjectName = "",
-        $incomingObjectName = "",
-        $incomingObject2Name = ""
-    ) {
+        string  $filterName,
+        ?array  $parameters = null,
+        ?string $outgoingObjectName = null,
+        ?string $incomingObjectName = null,
+        ?string $incomingObject2Name = null,
+    ): void
+    {
+        $incomingObjectName ??= "";
+        $outgoingObjectName ??= "";
+        $incomingObject2Name ??= "";
+        $parameters ??= "";
         if ($this->images) {
-            if ($incomingObjectName == "") {
+            if ($incomingObjectName === "") {
                 $incomingObject = reset($this->images);
             } else {
                 $incomingObject = $this->images[$incomingObjectName];
             }
 
-            if ($outgoingObjectName == '') {
+            if ($outgoingObjectName === '') {
                 $outgoingObject = $incomingObject;
             } else {
                 if (isset($this->images[$outgoingObjectName]) && is_object($this->images[$outgoingObjectName])) {
@@ -132,7 +104,7 @@ class ImageProcess
                 }
             }
 
-            if ($incomingObject2Name == '') {
+            if ($incomingObject2Name === '') {
                 $incomingObject2 = $incomingObject;
             } else {
                 if (isset($this->images[$incomingObject2Name]) && is_object($this->images[$incomingObject2Name])) {
@@ -144,11 +116,7 @@ class ImageProcess
                 }
             }
 
-            $filterClassFileName = $this->processFiltersPath . ucfirst($filterName) . ".php";
-            if (file_exists($filterClassFileName)) {
-                require_once $filterClassFileName;
-            }
-            $filterClassName = '\ImageProcess\\' . ucfirst($filterName);
+            $filterClassName = '\\ImageProcess\\Filters\\' . ucfirst($filterName);
 
             $filterObject = new $filterClassName($filterClassName, $parameters);
             $filterObject->incomingObject = $incomingObject;
@@ -161,16 +129,15 @@ class ImageProcess
         }
     }
 
-    /**
-     * @param string $objectName
-     * @param string $imageFileName
-     * @return string
-     */
-    public function registerImage($objectName = "", $imageFileName = "")
+    public function registerImage(?string $objectName = null, ?string $imageFileName = null): string
     {
-        if ($objectName == "") {
+        if ($objectName === null) {
             $objectsCount = count($this->images);
             $objectName = "imageObject_" . $objectsCount;
+        }
+
+        if ($imageFileName !== null && !is_file($imageFileName)) {
+            throw new RuntimeException(sprintf('File "%s" does not exist', $imageFileName));
         }
 
         $this->images[$objectName] = new ImageObject($objectName, $imageFileName);
@@ -178,7 +145,7 @@ class ImageProcess
         return $objectName;
     }
 
-    public function executeProcess()
+    public function executeProcess(): void
     {
         if ($this->gammaCorrectionEnabled) {
             foreach ($this->images as $imageObject) {
@@ -190,8 +157,8 @@ class ImageProcess
         }
 
         $imagesCached = true;
-        foreach ($this->exportList as $key => &$exportOperation) {
-            if ($exportOperation['cacheExists'] == false) {
+        foreach ($this->exportList as $exportOperation) {
+            if ($exportOperation['cacheExists'] === false) {
                 $imagesCached = false;
                 break;
             }
@@ -211,36 +178,133 @@ class ImageProcess
     }
 
     /**
-     * @param string $objectName
-     * @param string $fileType
-     * @param string $fileName
-     * @param int $quality
-     * @param bool $lossless
-     * @param string $cacheFileName
-     * @param string $cacheGroup
+     * @throws ImagickException
+     */
+    protected function exportImage($exportOperation): void
+    {
+        $objectName = $exportOperation['objectName'];
+        $cacheExists = $exportOperation['cacheExists'];
+        $fileType = $exportOperation['fileType'];
+        $fileName = $exportOperation['fileName'];
+        $cacheFileName = $exportOperation['cacheFileName'];
+        $cacheGroup = $exportOperation['cacheGroup'];
+        if (!empty($exportOperation['jpegQuality'])) {
+            $quality = $exportOperation['jpegQuality'];
+        } else {
+            $quality = $exportOperation['quality'];
+        }
+        $lossless = $exportOperation['lossless'];
+        $cacheFilePath = $exportOperation['cacheFilePath'];
+
+        if (!$cacheExists || !$this->imagesCaching) {
+            if ($cacheGroup) {
+                if (!is_dir($this->cachePath . $cacheFileName)) {
+                    if (!mkdir($concurrentDirectory = $this->cachePath . $cacheFileName, $this->defaultCachePermissions, true) && !is_dir($concurrentDirectory)) {
+                        throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+                    }
+                }
+            }
+            if (is_object($this->images[$objectName]) && $this->images[$objectName]->getGDResource()) {
+                $imageObject = $this->images[$objectName];
+                if ($fileType === 'svg') {
+                    copy($imageObject->getImageFilePath(), $cacheFilePath);
+                } else {
+                    $temporaryGDResource = imagecreatetruecolor($imageObject->getWidth(), $imageObject->getHeight());
+                    if ($fileType === 'png' || $fileType === 'webp') {
+                        imagealphablending($temporaryGDResource, false);
+                        imagesavealpha($temporaryGDResource, true);
+                    }
+                    if ($this->gammaCorrectionEnabled) {
+                        imagegammacorrect($imageObject->getGDResource(), 1.0, 2.2);
+                    }
+                    imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0,
+                        $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(),
+                        $imageObject->getHeight());
+
+
+                    if ($fp = fopen($cacheFilePath, 'wb')) {
+                        if (flock($fp, LOCK_EX)) {
+                            $gdCacheFile = $cacheFilePath . 'gd';
+                            switch ($fileType) {
+                                case 'jpg':
+                                case 'jpeg':
+                                    imagejpeg($temporaryGDResource, $gdCacheFile, $quality);
+                                    break;
+
+                                case 'png':
+                                    imagepng($temporaryGDResource, $gdCacheFile);
+                                    break;
+
+                                case 'gif':
+                                    imagegif($temporaryGDResource, $gdCacheFile);
+                                    break;
+
+                                case 'bmp':
+                                    imagebmp($temporaryGDResource, $gdCacheFile);
+                                    break;
+
+                                case 'webp':
+                                    if (class_exists('Imagick')) {
+                                        imagepng($temporaryGDResource, $gdCacheFile);
+
+                                        $image = new Imagick();
+                                        $image->pingImage($gdCacheFile);
+                                        $image->readImage($gdCacheFile);
+                                        $image->setImageFormat("webp");
+                                        $image->setOption('webp:method', '6');
+                                        if (!$lossless) {
+                                            $image->setImageCompressionQuality($quality);
+                                        } else {
+                                            $image->setOption('webp:lossless', 'true');
+                                            $image->setImageAlphaChannel(Imagick::ALPHACHANNEL_ACTIVATE);
+                                            $image->setBackgroundColor(new ImagickPixel('transparent'));
+                                        }
+                                        $image->writeImage($gdCacheFile);
+                                    } else {
+                                        imagewebp($temporaryGDResource, $gdCacheFile, $quality);
+                                    }
+                                    break;
+                            }
+                            ftruncate($fp, 0);
+                            fwrite($fp, file_get_contents($gdCacheFile));
+                            unlink($gdCacheFile);
+                            flock($fp, LOCK_UN);
+                        }
+                        fclose($fp);
+                    }
+                }
+                chmod($cacheFilePath, $this->defaultCachePermissions);
+            }
+        }
+
+        if ($fileName !== null) {
+            $fileContents = file_get_contents($cacheFilePath);
+            file_put_contents($fileName, $fileContents);
+        }
+    }
+
+    /**
      * @return string[]
      */
     public function registerExport(
-        $objectName = null,
-        $fileType = null,
-        $fileName = "",
-        $quality = null,
-        $lossless = false,
-        $cacheFileName = '',
-        $cacheGroup = ''
-    ) {
-        if (is_null($quality)) {
+        ?string $objectName = null,
+        ?string $fileType = null,
+        ?string $fileName = null,
+        ?int    $quality = null,
+        bool    $lossless = false,
+        string  $cacheFileName = '',
+        string  $cacheGroup = '',
+    ): array
+    {
+        if ($quality === null) {
             $quality = $this->quality;
         }
 
         $exportOperation = [];
-        if (is_null($objectName)) {
-            foreach ($this->images as $key => $imageObject) {
-                $objectName = &$key;
-                break;
-            }
+        if ($objectName === null) {
+            $objectName = array_key_first($this->images);
         }
-        if (is_null($fileType)) {
+        if ($fileType === null) {
             $fileType = $this->images[$objectName]->getOriginalType();
         }
 
@@ -277,115 +341,7 @@ class ImageProcess
         return $exportOperation;
     }
 
-    protected function exportImage($exportOperation)
-    {
-        $objectName = $exportOperation['objectName'];
-        $cacheExists = $exportOperation['cacheExists'];
-        $fileType = $exportOperation['fileType'];
-        $fileName = $exportOperation['fileName'];
-        $cacheFileName = $exportOperation['cacheFileName'];
-        $cacheGroup = $exportOperation['cacheGroup'];
-        if (!empty($exportOperation['jpegQuality'])) {
-            $quality = $exportOperation['jpegQuality'];
-        } else {
-            $quality = $exportOperation['quality'];
-        }
-        $lossless = $exportOperation['lossless'];
-        $cacheFilePath = $exportOperation['cacheFilePath'];
-
-        if (!$cacheExists || !$this->imagesCaching) {
-            if ($cacheGroup) {
-                if (!is_dir($this->cachePath . $cacheFileName)) {
-                    mkdir($this->cachePath . $cacheFileName, $this->defaultCachePermissions, true);
-                }
-            }
-            if (is_object($this->images[$objectName]) && $this->images[$objectName]->getGDResource()) {
-                $imageObject = $this->images[$objectName];
-                if ($fileType == 'svg') {
-                    copy($imageObject->getImageFilePath(), $cacheFilePath);
-                } else {
-                    $temporaryGDResource = imagecreatetruecolor($imageObject->getWidth(), $imageObject->getHeight());
-                    if ($fileType == 'png' || $fileType == 'webp') {
-                        imagealphablending($temporaryGDResource, false);
-                        imagesavealpha($temporaryGDResource, true);
-                    }
-                    if ($this->gammaCorrectionEnabled) {
-                        imagegammacorrect($imageObject->getGDResource(), 1.0, 2.2);
-                    }
-                    imagecopyresampled($temporaryGDResource, $imageObject->getGDResource(), 0, 0, 0, 0,
-                        $imageObject->getWidth(), $imageObject->getHeight(), $imageObject->getWidth(),
-                        $imageObject->getHeight());
-
-
-                    if ($fp = fopen($cacheFilePath, "w")) {
-                        if (flock($fp, LOCK_EX)) {
-                            $gdCacheFile = $cacheFilePath . 'gd';
-                            switch ($fileType) {
-                                case 'jpg':
-                                case 'jpeg':
-                                    imagejpeg($temporaryGDResource, $gdCacheFile, $quality);
-                                    break;
-
-                                case 'png':
-                                    imagepng($temporaryGDResource, $gdCacheFile);
-                                    break;
-
-                                case 'gif':
-                                    imagegif($temporaryGDResource, $gdCacheFile);
-                                    break;
-
-                                case 'bmp':
-                                    imagebmp($temporaryGDResource, $gdCacheFile);
-                                    break;
-
-                                case 'webp':
-                                    if (class_exists('Imagick')) {
-                                        imagepng($temporaryGDResource, $gdCacheFile);
-
-                                        $image = new \Imagick();
-                                        $image->pingImage($gdCacheFile);
-                                        $image->readImage($gdCacheFile);
-                                        $image->setImageFormat("webp");
-                                        $image->setOption('webp:method', '6');
-                                        if (!$lossless) {
-                                            $image->setImageCompressionQuality($quality);
-                                        } else {
-                                            $image->setOption('webp:lossless', 'true');
-                                            $image->setImageAlphaChannel(\Imagick::ALPHACHANNEL_ACTIVATE);
-                                            $image->setBackgroundColor(new \ImagickPixel('transparent'));
-                                        }
-                                        $image->writeImage($gdCacheFile);
-                                    } else {
-                                        imagewebp($temporaryGDResource, $gdCacheFile, $quality);
-                                    }
-                                    break;
-                            }
-                            ftruncate($fp, 0);
-                            fwrite($fp, file_get_contents($gdCacheFile));
-                            unlink($gdCacheFile);
-                            flock($fp, LOCK_UN);
-                        }
-                        fclose($fp);
-                    }
-                }
-                chmod($cacheFilePath, $this->defaultCachePermissions);
-            }
-        }
-
-        if ($fileName != '') {
-            $fileContents = file_get_contents($cacheFilePath);
-            file_put_contents($fileName, $fileContents);
-        }
-    }
-
-    protected function checkCachePath()
-    {
-        if ($this->cachePath && !is_dir($this->cachePath)) {
-            mkdir($this->cachePath, $this->defaultCachePermissions, true);
-        }
-    }
-
-    public function setDefaultCachePermissions($defaultCachePermissions)
+    public function setDefaultCachePermissions($defaultCachePermissions): void
     {
         $this->defaultCachePermissions = $defaultCachePermissions;
     }

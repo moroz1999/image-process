@@ -1,32 +1,16 @@
 <?php
+declare(strict_types=1);
 
 namespace ImageProcess;
 
 abstract class Filter
 {
-    /**
-     * @var string
-     */
-    public $name;
-    /**
-     * @var ImageObject
-     */
-    public $incomingObject;
-    /**
-     * @var ImageObject
-     */
-    public $incomingObject2;
-    /**
-     * @var ImageObject
-     */
-    public $outgoingObject;
+    public string $name;
+    public ImageObject $incomingObject;
+    public ImageObject $incomingObject2;
+    public ImageObject $outgoingObject;
 
-    /**
-     * Filter constructor.
-     * @param string $name
-     * @param string $parameters
-     */
-    public function __construct($name, $parameters = null)
+    public function __construct(string $name, ?array $parameters = null)
     {
         if ($parameters !== null) {
             $this->importParametersArray($parameters);
@@ -34,45 +18,26 @@ abstract class Filter
         $this->name = $name;
     }
 
-    public function startProcess($imageProcess)
+    protected function importParametersArray(array $parameters): void
     {
-        if ($this->incomingObject->getGDResource()){
-            $resultObject = $this->processObject($imageProcess, $this->incomingObject, $this->incomingObject2);
-            $this->outgoingObject->setGDResource($resultObject->getGDResource());
+        foreach ($parameters as $variable => $value) {
+            $this->$variable = $value;
         }
     }
 
-    /**
-     * @param ImageProcess $imageProcess
-     * @param ImageObject $object1
-     * @param ImageObject|null $object2
-     * @return imageObject
-     */
+    public function startProcess($imageProcess): void
+    {
+        if ($this->incomingObject->getGDResource()) {
+            $resultObject = $this->processObject($imageProcess, $this->incomingObject, $this->incomingObject2);
+            if ($resultObject !== null){
+                $this->outgoingObject->setGDResource($resultObject->getGDResource());
+            }
+        }
+    }
+
     abstract protected function processObject(
         ImageProcess $imageProcess,
-        ImageObject $object1,
-        ImageObject $object2 = null
-    );
-
-    /**
-     * @param string $parameters
-     */
-    protected function importParametersArray($parameters)
-    {
-        if (is_array($parameters)) {
-            foreach ($parameters as $variable => $value) {
-                $this->$variable = $value;
-            }
-        } else {
-            $parameters = explode(',', $parameters);
-            foreach ($parameters as $parameter) {
-                $arguments = explode('=', $parameter);
-                $variable = trim($arguments[0]);
-                $value = trim($arguments[1]);
-
-                $this->$variable = $value;
-            }
-        }
-
-    }
+        ImageObject  $object1,
+        ?ImageObject $object2 = null,
+    ): ?imageObject;
 }

@@ -1,44 +1,77 @@
 <?php
+declare(strict_types=1);
 
 namespace ImageProcess;
 
+use GdImage;
+
 class ImageObject
 {
-    protected $originalType;
-    protected $width;
-    protected $height;
-    protected $imageFilePath;
-    protected $objectName;
-    protected $GDResource;
-    protected $cacheString;
-    protected $originalSize;
-    protected $originalDate;
+    protected string $objectName;
+    protected ?string $imageFilePath;
+    protected ?string $originalType = null;
+    protected ?int $width = null;
+    protected ?int $height = null;
+    protected ?GdImage $GDResource = null;
+    protected ?string $cacheString = null;
+    protected ?int $originalSize = null;
+    protected ?int $originalDate = null;
 
-    public function __construct($objectName, $imageFilePath = "")
+    public function __construct(string $objectName, ?string $imageFilePath = null)
     {
         $this->objectName = $objectName;
         $this->imageFilePath = $imageFilePath;
     }
 
-    protected function createEmptyGDResource()
-    {
-        if ($this->width && $this->height) {
-            $this->GDResource = imagecreatetruecolor($this->width, $this->height);
-
-            imagealphablending($this->GDResource, false);
-            imagesavealpha($this->GDResource, true);
-        }
-    }
-
     /**
      * @return string
      */
-    public function getImageFilePath()
+    public function getImageFilePath(): string
     {
         return $this->imageFilePath;
     }
 
-    protected function importImageFile()
+    public function getWidth(): int
+    {
+        if ($this->width === null) {
+            $this->width = imagesx($this->getGDResource());
+        }
+
+        return $this->width;
+    }
+
+    public function setWidth(int $width): void
+    {
+        $this->width = $width;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getGDResource(): GdImage
+    {
+        if ($this->GDResource === null) {
+            if ($this->imageFilePath !== null) {
+                $this->importImageFile();
+            } else {
+                $this->createEmptyGDResource();
+            }
+        }
+
+        return $this->GDResource;
+    }
+
+    /**
+     * @param mixed $GDResource
+     */
+    public function setGDResource(GdImage $GDResource): void
+    {
+        $this->GDResource = $GDResource;
+        $this->width = null;
+        $this->height = null;
+    }
+
+    protected function importImageFile(): void
     {
         if (is_file($this->imageFilePath)) {
             if ($info = getimagesize($this->imageFilePath)) {
@@ -72,56 +105,17 @@ class ImageObject
         }
     }
 
-    /**
-     * @return mixed
-     */
-    public function getGDResource()
+    protected function createEmptyGDResource(): void
     {
-        if ($this->GDResource === null) {
-            if ($this->imageFilePath != "") {
-                $this->importImageFile();
-            } else {
-                $this->createEmptyGDResource();
-            }
+        if ($this->width && $this->height) {
+            $this->GDResource = imagecreatetruecolor($this->width, $this->height);
+
+            imagealphablending($this->GDResource, false);
+            imagesavealpha($this->GDResource, true);
         }
-
-        return $this->GDResource;
     }
 
-    /**
-     * @param mixed $GDResource
-     */
-    public function setGDResource($GDResource)
-    {
-        $this->GDResource = $GDResource;
-        $this->width = null;
-        $this->height = null;
-    }
-
-    /**
-     * @return string
-     */
-    public function getWidth()
-    {
-        if ($this->width === null) {
-            $this->width = imagesx($this->getGDResource());
-        }
-
-        return $this->width;
-    }
-
-    /**
-     * @param string $width
-     */
-    public function setWidth($width)
-    {
-        $this->width = (int)$width;
-    }
-
-    /**
-     * @return string
-     */
-    public function getHeight()
+    public function getHeight(): int
     {
         if ($this->height === null) {
             $this->height = imagesy($this->getGDResource());
@@ -130,18 +124,15 @@ class ImageObject
         return $this->height;
     }
 
-    /**
-     * @param string $height
-     */
-    public function setHeight($height)
+    public function setHeight(int $height): void
     {
-        $this->height = (int)$height;
+        $this->height = $height;
     }
 
     /**
      * @return string
      */
-    public function getCacheString()
+    public function getCacheString(): string
     {
         if ($this->cacheString === null) {
             $this->cacheString .= $this->getOriginalDate() . ' ' . $this->getOriginalSize() . ' ';
@@ -150,28 +141,20 @@ class ImageObject
     }
 
     /**
-     * @param string $value
+     * @return bool|int|null
      */
-    public function appendCacheString($value)
+    public function getOriginalDate(): bool|int|null
     {
-        $this->cacheString .= $value;
-    }
-
-    /**
-     * @return string
-     */
-    public function getOriginalType()
-    {
-        if ($this->originalType === null) {
-            $this->importImageFile();
+        if ($this->originalDate === null) {
+            $this->originalDate = filemtime($this->imageFilePath);
         }
-        return $this->originalType;
+        return $this->originalDate;
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getOriginalSize()
+    public function getOriginalSize(): ?int
     {
         if ($this->originalSize === null) {
             $this->originalSize = filesize($this->imageFilePath);
@@ -181,13 +164,21 @@ class ImageObject
     }
 
     /**
-     * @return bool|int
+     * @param string $value
      */
-    public function getOriginalDate()
+    public function appendCacheString($value): void
     {
-        if ($this->originalDate === null) {
-            $this->originalDate = filemtime($this->imageFilePath);
+        $this->cacheString .= $value;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getOriginalType(): ?string
+    {
+        if ($this->originalType === null) {
+            $this->importImageFile();
         }
-        return $this->originalDate;
+        return $this->originalType;
     }
 }

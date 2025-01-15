@@ -11,7 +11,8 @@
   "type": "package",
   "require": {
     "ext-gd": "*",
-    "php": ">=7.0"
+    "php": "^8.2",
+    "ext-imagick": "*"
   },
   "autoload": {
     "psr-4": {

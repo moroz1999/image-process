@@ -35,7 +35,7 @@ class Fit extends Filter
             $newHeight = $this->height;
             $newWidth = $object1->getWidth() * $this->height / $object1->getHeight();
         }
-        $newWidth = (round)$newWidth;
+        $newWidth = (int)$newWidth;
         $newHeight = (int)ceil($newHeight);
         $newObject = $imageProcess->getEmptyImageObject($newWidth, $newHeight);
         imagecopyresampled($newObject->getGDResource(), $object1->getGDResource(), 0, 0, 0, 0, $newWidth, $newHeight, $object1->getWidth(), $object1->getHeight());

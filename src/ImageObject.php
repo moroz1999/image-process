@@ -31,6 +31,9 @@ class ImageObject
         return $this->imageFilePath;
     }
 
+    /**
+     * @throws SourceFileException
+     */
     public function getWidth(): int
     {
         if ($this->width === null) {
@@ -47,6 +50,7 @@ class ImageObject
 
     /**
      * @return mixed
+     * @throws SourceFileException
      */
     public function getGDResource(): GdImage
     {
@@ -71,39 +75,52 @@ class ImageObject
         $this->height = null;
     }
 
+    /**
+     * @throws SourceFileException
+     */
     protected function importImageFile(): void
     {
-        if (is_file($this->imageFilePath)) {
-            if ($info = getimagesize($this->imageFilePath)) {
-                switch ($info['mime']) {
-                    case 'image/jpeg':
-                        $this->originalType = 'jpg';
-                        $this->GDResource = imagecreatefromjpeg($this->imageFilePath);
-                        break;
-                    case 'image/gif':
-                        $this->originalType = 'gif';
-                        $this->GDResource = imagecreatefromgif($this->imageFilePath);
-                        break;
-                    case 'image/png':
-                        $this->originalType = 'png';
-                        $this->GDResource = imagecreatefrompng($this->imageFilePath);
-                        break;
-                    case 'image/bmp':
-                        $this->originalType = 'bmp';
-                        $this->GDResource = imagecreatefrombmp($this->imageFilePath);
-                        break;
-                    case 'image/webp':
-                        $this->originalType = 'webp';
-                        $this->GDResource = imagecreatefromwebp($this->imageFilePath);
-                        break;
-                }
-                if ($this->GDResource) {
-                    $this->width = imagesx($this->GDResource);
-                    $this->height = imagesy($this->GDResource);
-                }
-            }
+        // Check for existance
+        if (!is_file($this->imageFilePath)) {
+            throw new SourceFileException("File is missing: {$this->imageFilePath}");
         }
+
+        // Detect image info
+        $imageInfo = getimagesize($this->imageFilePath);
+        if ($imageInfo === false || empty($imageInfo['mime'])) {
+            throw new SourceFileException("Unknown image format: {$this->imageFilePath}");
+        }
+
+        $mimeType = $imageInfo['mime'];
+
+        // MIME to loader map
+        $mimeToLoader = [
+            'image/jpeg' => ['ext' => 'jpg', 'loader' => 'imagecreatefromjpeg'],
+            'image/gif' => ['ext' => 'gif', 'loader' => 'imagecreatefromgif'],
+            'image/png' => ['ext' => 'png', 'loader' => 'imagecreatefrompng'],
+            'image/bmp' => ['ext' => 'bmp', 'loader' => 'imagecreatefrombmp'],
+            'image/webp' => ['ext' => 'webp', 'loader' => 'imagecreatefromwebp'],
+        ];
+
+        if (!isset($mimeToLoader[$mimeType])) {
+            throw new SourceFileException("Unsupported image MIME type: {$mimeType} {$this->imageFilePath}");
+        }
+
+        $this->originalType = $mimeToLoader[$mimeType]['ext'];
+        $loader = $mimeToLoader[$mimeType]['loader'];
+
+        /** @var resource|\GdImage|false $gdImage */
+        $gdImage = @$loader($this->imageFilePath);
+
+        if ($gdImage === false) {
+            throw new SourceFileException("Failed to create GD image from file: {$this->imageFilePath}");
+        }
+
+        $this->GDResource = $gdImage;
+        $this->width = imagesx($this->GDResource);
+        $this->height = imagesy($this->GDResource);
     }
+
 
     protected function createEmptyGDResource(): void
     {
@@ -173,6 +190,8 @@ class ImageObject
 
     /**
      * @return string|null
+     * @throws SourceFileException
+     * @throws SourceFileException
      */
     public function getOriginalType(): ?string
     {
